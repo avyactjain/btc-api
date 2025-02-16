@@ -1,0 +1,8 @@
+{
+    "listen_address": "127.0.0.1:3002",
+    "chain_config": {
+        "chain": "bitcoin",
+        "chain_id": 1,
+        "rpc_url": "http://127.0.0.1:8332"
+    }
+}

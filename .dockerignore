@@ -1,0 +1,28 @@
+# Ignore target directory (Rust build artifacts)
+target/
+
+# config file
+src/config/config.json
+
+# Ignore Cargo lock if you want reproducible builds (Optional)
+**/Cargo.lock
+
+# Ignore temporary files
+*.tmp
+*.swp
+*.swo
+
+# Ignore editor and IDE settings
+.idea/
+.vscode/
+
+# Ignore version control files
+.git/
+.gitignore
+
+# Ignore Docker artifacts
+.dockerignore
+Dockerfile
+
+# Ignore logs
+*.log
