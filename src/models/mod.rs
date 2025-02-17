@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NetworkFeeResponse {
@@ -5,8 +7,6 @@ pub struct NetworkFeeResponse {
     pub data: Option<NetworkFeeResponseData>,
     pub error_msg: Option<String>,
 }
-
-use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -16,4 +16,22 @@ pub struct NetworkFeeResponseData {
     hour_fee: i64,
     economy_fee: i64,
     minimum_fee: i64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ValidateTransactionHashParams {
+    pub transaction_hash: String,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ValidateTransactionHashResponse {
+    pub is_error: bool,
+    pub data: Option<ValidateTransactionHashResponseData>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ValidateTransactionHashResponseData {
+    pub is_valid: bool,
 }
