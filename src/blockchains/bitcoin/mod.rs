@@ -208,3 +208,35 @@ impl Bitcoin {
         }
     }
 }
+
+#[tokio::test]
+async fn test_get_raw_transaction() {
+    // All mainnet txn hashes
+    // Comment out pending txn hash if needed. It might be confirmed by the time you run the test.
+    let pending_txn_hash = "52d54371b3564f7beb9d352abc001f28fef8ff18d499f7b02909f752d3bf732f";
+    let confirmed_txn_hash = "ce593556a4868d9ac26a860505a1c732aa38aea51d942505afc0b491c3b35f87";
+    let cancelled_txn_hash = "69f8ab2bf2d82b3e5fd7626736d040d9c11d4ea3c31fb0c30bb0d72e8c5a6238";
+
+    let bitcoin = Bitcoin::new("https://btc.getblock.io/mainnet/".to_string());
+
+    let pending_txn_result = bitcoin
+        .get_raw_transaction(pending_txn_hash.to_string())
+        .await;
+    let confirmed_txn_result = bitcoin
+        .get_raw_transaction(confirmed_txn_hash.to_string())
+        .await;
+
+    let cancelled_txn_result = bitcoin
+        .get_raw_transaction(cancelled_txn_hash.to_string())
+        .await;
+
+    assert_eq!(pending_txn_result.unwrap().txn_status, TxnStatus::Pending);
+    assert_eq!(
+        confirmed_txn_result.unwrap().txn_status,
+        TxnStatus::Confirmed
+    );
+    assert_eq!(
+        cancelled_txn_result.unwrap().txn_status,
+        TxnStatus::Cancelled
+    );
+}

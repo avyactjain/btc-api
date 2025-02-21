@@ -39,7 +39,7 @@ pub struct ValidateTransactionHashResponseData {
     pub txn_data: Option<TxnData>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub enum TxnStatus {
     Confirmed,
