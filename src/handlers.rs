@@ -1,8 +1,7 @@
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Query, State},
     Json,
 };
-use serde::Deserialize;
 use tracing::debug;
 
 use crate::{

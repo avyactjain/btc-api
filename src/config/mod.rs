@@ -16,7 +16,6 @@ pub(crate) struct Config {
 #[derive(Deserialize)]
 pub(crate) struct ChainConfig {
     pub chain: ChainName,
-    pub chain_id: u16,
     pub rpc_url: String,
     pub rpc_user: Option<String>,
     pub rpc_password: Option<String>,

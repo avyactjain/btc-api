@@ -3,6 +3,7 @@ use axum::Json;
 use crate::{chain::Chain, models::{NetworkFeeResponse, ValidateTransactionHashResponse}};
 
 #[derive(Debug, Clone)]
+//todo : Add a type parameter for the blockchain instance, so that we can use the same wrapper for different blockchains.
 pub struct BlockchainWrapper<T: Chain>(T);
 
 impl<T: Chain> BlockchainWrapper<T> {
