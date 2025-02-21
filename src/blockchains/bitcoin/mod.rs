@@ -2,12 +2,13 @@ use axum::Json;
 use reqwest::{Client, Error, Response};
 use response_models::BlockchaincomRawTxn;
 use serde::Serialize;
+use tracing::error;
 
 use crate::{
     btc_api_error::BtcApiError,
     chain::Chain,
     models::{
-        AddressSpent, NetworkFeeResponse, NetworkFeeResponseData, TxnData, TxnStatus,
+        NetworkFeeResponse, NetworkFeeResponseData, TxnData, TxnStatus,
         ValidateTransactionHashResponse, ValidateTransactionHashResponseData,
     },
 };
@@ -204,7 +205,14 @@ impl Bitcoin {
 
                 Ok(result)
             }
-            _ => Err(BtcApiError::UnableToVerifyTxnStatus),
+            _ => {
+                error!(
+                    "Unable to verify transaction status for txn hash: {}.",
+                    transaction_hash
+                );
+
+                Err(BtcApiError::UnableToVerifyTxnStatus)
+            }
         }
     }
 }
