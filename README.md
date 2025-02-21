@@ -62,7 +62,7 @@ A REST API service for interacting with Bitcoin and other blockchain networks.
 ### Get Network Fee
 
     ```bash
-    curl http://localhost:3002/api/v1/network-fee
+    curl http://localhost:3005/networkFee
     ``` 
 
     Response:
@@ -86,6 +86,65 @@ A REST API service for interacting with Bitcoin and other blockchain networks.
         "errorMsg": "Error message"
     }
     ```                 
+
+### Validate Transaction Hash
+
+    ```bash
+    curl "http://localhost:3005/validateTransactionHash?transaction_hash=69f8ab2bf2d82b3e5fd7626736d040d9c11d4ea3c31fb0c30bb0d72e8c5a6238"
+    ```  
+
+      Response:
+    ```json
+   {
+    "isError": false,
+    "data": {
+        "txnHash": "69f8ab2bf2d82b3e5fd7626736d040d9c11d4ea3c31fb0c30bb0d72e8c5a6238",
+        "txnStatus": "cancelled",
+        "txnData": {
+            "block_index": null,
+            "block_height": null,
+            "consumed_fees_in_satoshis": 5220,
+            "txn_input_amount_in_satoshis": 123497,
+            "txn_output_amount_in_satoshis": 118277,
+            "input_txns": [
+                {
+                    "address": "3LPwjGtU2gfY5kSAAj44Y62pjTFvAHp9L2",
+                    "amount": 104000
+                },
+                {
+                    "address": "3LPwjGtU2gfY5kSAAj44Y62pjTFvAHp9L2",
+                    "amount": 10443
+                },
+                {
+                    "address": "3LPwjGtU2gfY5kSAAj44Y62pjTFvAHp9L2",
+                    "amount": 9054
+                }
+            ],
+            "output_txns": [
+                {
+                    "address": "32SSfvCfRaSB8XzBLTHx8XHRxnZdJTBdVQ",
+                    "amount": 115000
+                },
+                {
+                    "address": "3LPwjGtU2gfY5kSAAj44Y62pjTFvAHp9L2",
+                    "amount": 3277
+                }
+            ]
+        }
+    },
+    "errorMsg": null
+    }
+    ```
+
+    Error Response:
+    ```json
+   {
+    "isError": true,
+    "data": null,
+    "errorMsg": "SerdeJsonError: missing field `hash` at line 1 column 83"
+    }   
+    ```                 
+
 
 ## Configuration
 
