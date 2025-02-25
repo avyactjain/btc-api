@@ -4,7 +4,20 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::AddressSpent;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum BlockchaincomResponse {
+    RawTxn(BlockchaincomRawTxn),
+    ApiError(BlockchaincomApiError),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BlockchaincomApiError {
+    pub error: String,
+    pub message: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct BlockchaincomRawTxn {
     hash: String,
     ver: u64,
@@ -26,7 +39,7 @@ pub struct BlockchaincomRawTxn {
     pub rbf: Option<bool>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
     sequence: u64,
     witness: String,
@@ -35,7 +48,7 @@ pub struct Input {
     pub prev_out: Out,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Out {
     #[serde(rename = "type")]
     out_type: u64,
@@ -48,7 +61,7 @@ pub struct Out {
     pub addr: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SpendingOutpoint {
     tx_index: u64,
     n: u64,
@@ -90,6 +103,37 @@ impl BlockchaincomRawTxn {
         self.fee
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone, Ord, PartialOrd, PartialEq, Eq)]
+pub struct BlockstreamUtxo {
+    txid: String,
+    vout: u32,
+    status: Status,
+    pub value: u64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Ord, Eq, PartialEq, PartialOrd)]
+pub struct Status {
+    confirmed: bool,
+    block_height: Option<u64>,
+    block_hash: Option<String>,
+    block_time: Option<u64>,
+}
+
+impl BlockstreamUtxo {
+    pub fn get_txid(&self) -> String {
+        self.txid.clone()
+    }
+
+    pub fn get_vout(&self) -> u32 {
+        self.vout
+    }
+
+    pub fn is_confirmed(&self) -> bool {
+        self.status.confirmed
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*; // Import functions from parent module
@@ -203,5 +247,58 @@ mod tests {
 
         let deserialized_json = serde_json::from_str::<BlockchaincomRawTxn>(json);
         assert!(deserialized_json.is_ok()); // ✅ Passes
+    }
+
+    #[test]
+    fn test_de_blockchaincom_response() {
+        let json = r#"{
+            "error": "not-found-or-invalid-arg",
+            "message": "Item not found or argument invalid"
+        }"#;
+
+        let deserialized_json = serde_json::from_str::<BlockchaincomResponse>(json);
+        assert!(deserialized_json.is_ok()); // ✅ Passes
+    }
+
+    #[test]
+    fn test_de_blockstream_response() {
+        let json = r#"
+       [
+            {
+                "txid": "cf63765034a06d6afb13ff7bf7bd5c4a6959188cf167c85aa17bb22a4c4b33b2",
+                "vout": 0,
+                "status": {
+                "confirmed": true,
+                "block_height": 3659267,
+                "block_hash": "00000000000000a54221360b8c9286bfeba1951e7bf3b47e2a5680d982a12c8e",
+                "block_time": 1738199336
+                },
+                "value": 39649
+            },
+            {
+                "txid": "d6db69946d2eece44bcda9e6beb2e859ad627662b53a917679b9ea8e70e1d60f",
+                "vout": 0,
+                "status": {
+                "confirmed": false
+                },
+                "value": 177791842
+            },
+            {
+                "txid": "a2a9afba41ea32a4c04e8984e84593796de447ac7b8f6caed9265ef332b21223",
+                "vout": 0,
+                "status": {
+                "confirmed": false
+                },
+                "value": 179929342
+            }
+        ]
+        "#;
+
+        let deserialized_json = serde_json::from_str::<Vec<BlockstreamUtxo>>(json);
+        assert!(deserialized_json.is_ok()); // Successfully deserialized response from blockstream ✅
+        assert_eq!(
+            deserialized_json.unwrap().get(0).unwrap().is_confirmed(),
+            true
+        );
     }
 }

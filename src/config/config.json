@@ -2,7 +2,8 @@
     "listen_address": "127.0.0.1:3002",
     "chain_config": {
         "chain": "bitcoin",
-        "chain_id": 1,
-        "rpc_url": "http://bitcoin-mainnet.core.chainstack.com/05caab04c58a2367a87803bb7c2de941/"
-    }
+        "variant": "Testnet",
+        "rpc_url": "https://blockstream.info/testnet/api/"
+    },
+    "rust_log_level": "debug"
 }

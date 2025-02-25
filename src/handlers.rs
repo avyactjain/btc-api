@@ -6,13 +6,17 @@ use tracing::debug;
 
 use crate::{
     blockchains::{bitcoin::Bitcoin, blockchain_wrapper::BlockchainWrapper},
-    models::{NetworkFeeResponse, ValidateTransactionHashParams, ValidateTransactionHashResponse},
+    models::{
+        CreateTransactionParams, CreateTransactionResponse, NetworkFeeResponse,
+        ValidateTransactionHashParams, ValidateTransactionHashResponse,
+    },
 };
 
 #[axum::debug_handler]
 pub(crate) async fn bitcoin_network_fee_handler(
     State(blockchain): State<BlockchainWrapper<Bitcoin>>,
 ) -> Json<NetworkFeeResponse> {
+    debug!("Received request to get network fee");
     blockchain.get_network_fee().await
 }
 
@@ -25,9 +29,25 @@ pub(crate) async fn bitcoin_validate_transaction_hash_handler(
         "Received request to validate transaction hash: {:#?}",
         params
     );
-    //todo: Validate the request here
 
     blockchain
         .validate_transaction_hash(params.transaction_hash)
         .await
+}
+
+#[axum::debug_handler]
+pub(crate) async fn bitcoin_create_transaction_handler(
+    State(blockchain): State<BlockchainWrapper<Bitcoin>>,
+    Json(params): Json<CreateTransactionParams>,
+) -> Json<CreateTransactionResponse> {
+    debug!("Received request to create transaction: {:#?}", params);
+
+    match params.validate() {
+        Ok(params) => blockchain.create_transaction(params).await,
+        Err(e) => Json(CreateTransactionResponse {
+            is_error: true,
+            data: None,
+            error_msg: Some(e.to_string()),
+        }),
+    }
 }

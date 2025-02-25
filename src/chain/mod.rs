@@ -1,9 +1,12 @@
 use axum::Json;
 use serde::Deserialize;
 
-use crate::models::{NetworkFeeResponse, ValidateTransactionHashResponse};
+use crate::models::{
+    CreateTransactionParams, CreateTransactionResponse, NetworkFeeResponse,
+    ValidateTransactionHashResponse,
+};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]
 pub(crate) enum ChainName {
     Bitcoin,
@@ -16,4 +19,8 @@ pub trait Chain {
         &self,
         transaction_hash: String,
     ) -> Json<ValidateTransactionHashResponse>;
+    async fn create_transaction(
+        &self,
+        transaction: CreateTransactionParams,
+    ) -> Json<CreateTransactionResponse>;
 }
