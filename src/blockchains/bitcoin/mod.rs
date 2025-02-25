@@ -316,7 +316,11 @@ impl Bitcoin {
         let blockstream_utxos =
             serde_json::from_str::<Vec<BlockstreamUtxo>>(&blockstream_response)?;
 
-        Ok(blockstream_utxos)
+        if blockstream_utxos.is_empty() {
+            Err(BtcApiError::NoUtxosFound(address))
+        } else {
+            Ok(blockstream_utxos)
+        }
     }
 
     async fn get_input_txns_and_change_amount(
@@ -329,7 +333,7 @@ impl Bitcoin {
 
         //1. Get the utxos for the from address
         let mut utxos = self
-            .find_spendable_utxos(transaction_params.from_address)
+            .find_spendable_utxos(transaction_params.from_address.clone())
             .await?;
 
         //2. Sort the UTXOs by value in ascending order

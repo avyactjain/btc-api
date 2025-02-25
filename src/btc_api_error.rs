@@ -10,6 +10,7 @@ pub enum BtcApiError {
     BitcoinParseOutPointError(bitcoin::hex::HexToArrayError),
     BitcoinParseAddressError(bitcoin::address::ParseError),
     UrlParseError(url::ParseError),
+    NoUtxosFound(String),
 }
 
 impl From<reqwest::Error> for BtcApiError {
@@ -65,6 +66,7 @@ impl std::fmt::Display for BtcApiError {
                 write!(f, "BitcoinParseAddressError: {}", e)
             }
             BtcApiError::UrlParseError(e) => write!(f, "UrlParseError: {}", e),
+            BtcApiError::NoUtxosFound(address) => write!(f, "NoUtxosFound for Address:{}", address),
         }
     }
 }
