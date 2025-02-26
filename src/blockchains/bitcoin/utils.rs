@@ -4,6 +4,9 @@ use bitcoin::{
     Address, CompressedPublicKey, KnownHrp, NetworkKind, PrivateKey, WPubkeyHash,
 };
 
+// This function is used to create a testnet wallet
+// Warning : Actual keys of a bitcoin wallet.
+#[allow(dead_code)]
 pub fn create_testnet_wallet() -> (PrivateKey, Address) {
     //1.Create a random private key
     let secp = Secp256k1::new();

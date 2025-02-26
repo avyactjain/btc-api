@@ -2,16 +2,27 @@ use axum::{
     extract::{Query, State},
     Json,
 };
-use tracing::debug;
+use tracing::{debug, error};
 
 use crate::{
     blockchains::{bitcoin::Bitcoin, blockchain_wrapper::BlockchainWrapper},
     models::{
         BroadcastTransactionParams, BroadcastTransactionResponse, CreateTransactionParams,
-        CreateTransactionResponse, NetworkFeeResponse, ValidateTransactionHashParams,
-        ValidateTransactionHashResponse,
+        CreateTransactionResponse, MethodNotAllowedResponse, NetworkFeeResponse,
+        ValidateTransactionHashParams, ValidateTransactionHashResponse,
     },
 };
+
+#[axum::debug_handler]
+pub(crate) async fn method_not_allowed_handler(
+    State(_): State<BlockchainWrapper<Bitcoin>>,
+) -> Json<MethodNotAllowedResponse> {
+    error!("Method not allowed");
+    Json(MethodNotAllowedResponse {
+        is_error: true,
+        error_msg: "Method not allowed".to_string(),
+    })
+}
 
 #[axum::debug_handler]
 pub(crate) async fn bitcoin_network_fee_handler(

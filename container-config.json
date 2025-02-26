@@ -1,8 +1,9 @@
 {
-    "listen_address": "0.0.0.0:3005",
+    "listen_address": "0.0.0.0:3006",
     "chain_config": {
         "chain": "bitcoin",
-        "chain_id": 1,
-        "rpc_url": "http://127.0.0.1:8332"
-    }
+        "variant": "Testnet",
+        "rpc_url": "https://blockstream.info/testnet/api/"
+    },
+    "rust_log_level": "debug"
 }

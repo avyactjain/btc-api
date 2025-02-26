@@ -119,6 +119,12 @@ pub struct BroadcastTransactionResponseData {
     pub response: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MethodNotAllowedResponse {
+    pub is_error: bool,
+    pub error_msg: String,
+}
+
 mod test {
     use crate::models::CreateTransactionParams;
 

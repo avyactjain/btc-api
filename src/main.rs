@@ -7,7 +7,8 @@ use blockchains::blockchain_wrapper::BlockchainWrapper;
 use btc_api_error::BtcApiError;
 use chain::ChainName;
 use handlers::{
-    bitcoin_broadcast_transaction_handler, bitcoin_create_transaction_handler, bitcoin_network_fee_handler, bitcoin_validate_transaction_hash_handler
+    bitcoin_broadcast_transaction_handler, bitcoin_create_transaction_handler,
+    bitcoin_network_fee_handler, bitcoin_validate_transaction_hash_handler, method_not_allowed_handler,
 };
 
 use tracing::info;
@@ -51,10 +52,10 @@ async fn main() -> Result<(), BtcApiError> {
             "/broadcastTransaction",
             post(bitcoin_broadcast_transaction_handler),
         )
+        .method_not_allowed_fallback(method_not_allowed_handler)
         .with_state(blockchain);
 
     let addr = config.listen_address;
-
     info!(
         "BTC-API listening on http://{:?} with config: {:#?}",
         addr, config

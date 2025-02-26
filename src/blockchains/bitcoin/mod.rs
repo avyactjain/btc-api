@@ -2,15 +2,9 @@ use std::str::FromStr;
 
 use axum::Json;
 use bitcoin::{
-    absolute::LockTime,
-    consensus::encode::serialize_hex,
-    hashes::{sha256d, Hash},
-    key::Secp256k1,
-    secp256k1::Message,
-    sighash::SighashCache,
-    transaction::Version,
-    Address, Amount, EcdsaSighashType, Network, OutPoint, Script, ScriptBuf, TxIn, TxOut, Txid,
-    Witness,
+    absolute::LockTime, consensus::encode::serialize_hex, key::Secp256k1, secp256k1::Message,
+    sighash::SighashCache, transaction::Version, Address, Amount, EcdsaSighashType, Network,
+    OutPoint, Script, ScriptBuf, TxIn, TxOut, Txid, Witness,
 };
 
 use bitcoin::blockdata::transaction::Transaction;
