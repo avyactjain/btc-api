@@ -3,8 +3,8 @@ use axum::Json;
 use crate::{
     chain::Chain,
     models::{
-        CreateTransactionParams, CreateTransactionResponse, NetworkFeeResponse,
-        ValidateTransactionHashResponse,
+        BroadcastTransactionParams, BroadcastTransactionResponse, CreateTransactionParams,
+        CreateTransactionResponse, NetworkFeeResponse, ValidateTransactionHashResponse,
     },
 };
 
@@ -33,5 +33,12 @@ impl<T: Chain> BlockchainWrapper<T> {
         transaction: CreateTransactionParams,
     ) -> Json<CreateTransactionResponse> {
         self.0.create_transaction(transaction).await
+    }
+
+    pub async fn broadcast_transaction(
+        &self,
+        transaction: BroadcastTransactionParams,
+    ) -> Json<BroadcastTransactionResponse> {
+        self.0.broadcast_transaction(transaction).await
     }
 }

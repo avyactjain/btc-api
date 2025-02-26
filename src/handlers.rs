@@ -7,8 +7,9 @@ use tracing::debug;
 use crate::{
     blockchains::{bitcoin::Bitcoin, blockchain_wrapper::BlockchainWrapper},
     models::{
-        CreateTransactionParams, CreateTransactionResponse, NetworkFeeResponse,
-        ValidateTransactionHashParams, ValidateTransactionHashResponse,
+        BroadcastTransactionParams, BroadcastTransactionResponse, CreateTransactionParams,
+        CreateTransactionResponse, NetworkFeeResponse, ValidateTransactionHashParams,
+        ValidateTransactionHashResponse,
     },
 };
 
@@ -50,4 +51,14 @@ pub(crate) async fn bitcoin_create_transaction_handler(
             error_msg: Some(e.to_string()),
         }),
     }
+}
+
+#[axum::debug_handler]
+pub(crate) async fn bitcoin_broadcast_transaction_handler(
+    State(blockchain): State<BlockchainWrapper<Bitcoin>>,
+    Json(params): Json<BroadcastTransactionParams>,
+) -> Json<BroadcastTransactionResponse> {
+    debug!("Received request to broadcast transaction: {:#?}", params);
+
+    blockchain.broadcast_transaction(params).await
 }

@@ -7,8 +7,7 @@ use blockchains::blockchain_wrapper::BlockchainWrapper;
 use btc_api_error::BtcApiError;
 use chain::ChainName;
 use handlers::{
-    bitcoin_create_transaction_handler, bitcoin_network_fee_handler,
-    bitcoin_validate_transaction_hash_handler,
+    bitcoin_broadcast_transaction_handler, bitcoin_create_transaction_handler, bitcoin_network_fee_handler, bitcoin_validate_transaction_hash_handler
 };
 
 use tracing::info;
@@ -35,7 +34,7 @@ async fn main() -> Result<(), BtcApiError> {
         ChainName::Bitcoin => BlockchainWrapper::new(Bitcoin::new(
             &config.chain_config.rpc_url,
             &config.chain_config.variant,
-        )),
+        )?),
     };
 
     let app = Router::new()
@@ -47,6 +46,10 @@ async fn main() -> Result<(), BtcApiError> {
         .route(
             "/createTransaction",
             post(bitcoin_create_transaction_handler),
+        )
+        .route(
+            "/broadcastTransaction",
+            post(bitcoin_broadcast_transaction_handler),
         )
         .with_state(blockchain);
 

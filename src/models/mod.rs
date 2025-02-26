@@ -1,6 +1,7 @@
+use bitcoin::Transaction;
 use serde::{Deserialize, Serialize};
 
-use crate::btc_api_error::BtcApiError;
+use crate::{blockchains::bitcoin::response_models::BlockstreamUtxo, btc_api_error::BtcApiError};
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -84,7 +85,8 @@ pub struct CreateTransactionResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateTransactionResponseData {
-    pub unsigned_raw_txn: String,
+    pub unsigned_raw_txn: Transaction,
+    pub used_utxos: Vec<BlockstreamUtxo>,
 }
 
 impl CreateTransactionParams {
@@ -100,9 +102,25 @@ impl CreateTransactionParams {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BroadcastTransactionParams {
+    pub signed_raw_txn: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BroadcastTransactionResponse {
+    pub is_error: bool,
+    pub data: Option<BroadcastTransactionResponseData>,
+    pub error_msg: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BroadcastTransactionResponseData {
+    pub response: String,
+}
+
 mod test {
     use crate::models::CreateTransactionParams;
-
 
     #[test]
     fn test_deserialize_create_transaction_params() {

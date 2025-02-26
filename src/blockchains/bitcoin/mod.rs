@@ -1,40 +1,36 @@
-use std::{error::Error, str::FromStr};
+use std::str::FromStr;
 
 use axum::Json;
 use bitcoin::{
     absolute::LockTime,
     consensus::encode::serialize_hex,
     hashes::{sha256d, Hash},
-    key::{rand::rngs::OsRng, Secp256k1},
-    secp256k1::{Message, SecretKey},
-    sighash::{Prevouts, SighashCache},
+    key::Secp256k1,
+    secp256k1::Message,
+    sighash::SighashCache,
     transaction::Version,
-    Address, Amount, CompressedPublicKey, EcdsaSighashType, KnownHrp, Network, NetworkKind,
-    OutPoint, PrivateKey, PublicKey, Script, ScriptBuf, Sequence, TxIn, TxOut, Txid, Witness,
+    Address, Amount, EcdsaSighashType, Network, OutPoint, Script, ScriptBuf, TxIn, TxOut, Txid,
+    Witness,
 };
 
 use bitcoin::blockdata::transaction::Transaction;
-use bitcoincore_rpc::json::SigHashType;
 use reqwest::{Client, Url};
 use response_models::{BlockchaincomResponse, BlockstreamUtxo};
 use tracing::{debug, error, info};
-use utils::{
-    dummy_unspent_transaction_output, receivers_address, senders_keys, CHANGE_AMOUNT,
-    DUMMY_UTXO_AMOUNT, SPEND_AMOUNT,
-};
+use utils::senders_keys;
+pub(crate) mod response_models;
 
 use crate::{
     btc_api_error::BtcApiError,
     chain::Chain,
     config::ChainVariant,
     models::{
-        CreateTransactionParams, CreateTransactionResponse, CreateTransactionResponseData,
-        NetworkFeeResponse, NetworkFeeResponseData, TxnData, TxnStatus,
-        ValidateTransactionHashResponse, ValidateTransactionHashResponseData,
+        BroadcastTransactionResponse, BroadcastTransactionResponseData, CreateTransactionParams,
+        CreateTransactionResponse, CreateTransactionResponseData, NetworkFeeResponse,
+        NetworkFeeResponseData, TxnData, TxnStatus, ValidateTransactionHashResponse,
+        ValidateTransactionHashResponseData,
     },
 };
-mod request_models;
-mod response_models;
 mod utils;
 
 // Mempool API for network fee
@@ -44,7 +40,7 @@ const BLOCKCHAIN_API_RAW_TRANSACTION_URL: &str = "https://blockchain.info/rawtx/
 
 #[derive(Debug, Clone)]
 pub struct Bitcoin {
-    pub rpc_url: String,
+    pub rpc_url: Url,
     pub network: Network,
 }
 
@@ -120,30 +116,44 @@ impl Chain for Bitcoin {
 
         match self.create_transaction(transaction_params).await {
             Ok((transaction, used_utxos)) => {
-                let raw_txn = serialize_hex(&transaction);
+                let signed_txn_hash = self
+                    .sign_transaction(transaction.clone(), used_utxos.clone())
+                    .await;
 
-                // Convert the raw transaction to bytes
-                let raw_tx_bytes = hex::decode(raw_txn).expect("Invalid hex transaction");
-
-                // Compute the double SHA-256 hash (32 bytes)
-                let tx_hash = sha256d::Hash::hash(&raw_tx_bytes).to_string();
-
-                // let signed_txn = self
-                //     .sign_transaction(transaction.clone(), used_utxos)
-                //     .await
-                //     .unwrap();
-
-                // self.broadcast_transaction(signed_txn).await.unwrap();
-
-                let x = self.sign_txn_test().await;
-                self.broadcast_transaction(x).await.unwrap();
+                self.broadcast_transaction(signed_txn_hash).await.unwrap();
 
                 result.is_error = false;
                 result.data = Some(CreateTransactionResponseData {
-                    unsigned_raw_txn: tx_hash,
-                })
+                    unsigned_raw_txn: transaction,
+                    used_utxos,
+                });
             }
             Err(err) => {
+                result.error_msg = Some(err.to_string());
+            }
+        }
+
+        Json(result)
+    }
+
+    async fn broadcast_transaction(
+        &self,
+        transaction: crate::models::BroadcastTransactionParams,
+    ) -> Json<crate::models::BroadcastTransactionResponse> {
+        let mut result = BroadcastTransactionResponse {
+            is_error: false,
+            data: None,
+            error_msg: None,
+        };
+
+        match self.broadcast_transaction(transaction.signed_raw_txn).await {
+            Ok(broadcase_api_response) => {
+                result.data = Some(BroadcastTransactionResponseData {
+                    response: broadcase_api_response,
+                });
+            }
+            Err(err) => {
+                result.is_error = true;
                 result.error_msg = Some(err.to_string());
             }
         }
@@ -153,7 +163,7 @@ impl Chain for Bitcoin {
 }
 
 impl Bitcoin {
-    pub fn new(rpc_url: &str, variant: &ChainVariant) -> Self {
+    pub fn new(rpc_url: &str, variant: &ChainVariant) -> Result<Self, BtcApiError> {
         let network = match variant {
             ChainVariant::Mainnet => Network::Bitcoin,
             ChainVariant::Testnet => Network::Testnet,
@@ -164,10 +174,10 @@ impl Bitcoin {
             rpc_url, network
         );
 
-        Self {
-            rpc_url: rpc_url.to_owned(),
+        Ok(Self {
+            rpc_url: rpc_url.parse::<Url>()?,
             network,
-        }
+        })
     }
 
     async fn get_raw_transaction(
@@ -303,7 +313,7 @@ impl Bitcoin {
 
         //1. Get the Txn inputs based on the UTXOs and the change amount
         let (inputs, used_utxos, change_amount) = self
-            .get_input_txns_utxos_amounts(transaction_params)
+            .get_input_txns_utxos_change_amount(transaction_params)
             .await?;
 
         debug!("Inputs: {:#?}", inputs);
@@ -329,34 +339,11 @@ impl Bitcoin {
             output: vec![txout_receiver, txout_change],
         };
 
-        debug!("Unsigned transaction created: {:#?}", txn);
-
+        info!("Unsigned transaction created: {:#?}", txn);
         Ok((txn, used_utxos))
     }
 
-    async fn find_spendable_utxos(
-        &self,
-        address: String,
-    ) -> Result<Vec<BlockstreamUtxo>, BtcApiError> {
-        //todo: Do URL parsing here
-        let url = self
-            .rpc_url
-            .parse::<Url>()?
-            .join(&format!("address/{}/utxo", address))?;
-
-        let blockstream_response = reqwest::get(url).await?.text().await?;
-        let blockstream_utxos =
-            serde_json::from_str::<Vec<BlockstreamUtxo>>(&blockstream_response)?;
-
-        if blockstream_utxos.is_empty() {
-            Err(BtcApiError::NoUtxosFound(address))
-        } else {
-            println!("Blockstream UTXOs: {:#?}", blockstream_utxos);
-            Ok(blockstream_utxos)
-        }
-    }
-
-    async fn get_input_txns_utxos_amounts(
+    async fn get_input_txns_utxos_change_amount(
         &self,
         transaction_params: CreateTransactionParams,
     ) -> Result<(Vec<TxIn>, Vec<BlockstreamUtxo>, u64), BtcApiError> {
@@ -370,7 +357,7 @@ impl Bitcoin {
             .find_spendable_utxos(transaction_params.from_address.clone())
             .await?;
 
-        //2. Sort the UTXOs by value in ascending order
+        //2. Sort the UTXOs by value in ascending order, this is to get the smallest utxos first so transaction is split up as much as possible
         utxos.sort_by_key(|utxo| utxo.value);
 
         for utxo in utxos {
@@ -399,161 +386,85 @@ impl Bitcoin {
         ))
     }
 
-    async fn sign_txn_test(&self) -> String {
+    async fn find_spendable_utxos(
+        &self,
+        address: String,
+    ) -> Result<Vec<BlockstreamUtxo>, BtcApiError> {
+        //todo: Do URL parsing here
+        let url = self.rpc_url.join(&format!("address/{}/utxo", address))?;
+
+        let blockstream_response = reqwest::get(url).await?.text().await?;
+        let blockstream_utxos =
+            serde_json::from_str::<Vec<BlockstreamUtxo>>(&blockstream_response)?;
+
+        if blockstream_utxos.is_empty() {
+            Err(BtcApiError::NoUtxosFound(address))
+        } else {
+            Ok(blockstream_utxos)
+        }
+    }
+    async fn sign_transaction(
+        &self,
+        mut unsigned_txn: Transaction,
+        used_utxos: Vec<BlockstreamUtxo>,
+    ) -> String {
+        info!("Signing transaction with {:#?}", unsigned_txn);
+
         let secp = Secp256k1::new();
 
-        // Get a secret key we control and the pubkeyhash of the associated pubkey.
-        // In a real application these would come from a stored secret.
         let (sk, wpkh) = senders_keys(&secp);
 
-        // Get an address to send to.
-        let address = receivers_address();
-
-        // Get an unspent output that is locked to the key above that we control.
-        // In a real application these would come from the chain.
-        let (dummy_out_point, dummy_utxo) = dummy_unspent_transaction_output(wpkh);
-
-        // The input for the transaction we are constructing.
-        let input = TxIn {
-            previous_output: dummy_out_point, // The dummy output we are spending.
-            script_sig: ScriptBuf::default(), // For a p2wpkh script_sig is empty.
-            sequence: Sequence::ZERO,
-            witness: Witness::default(), // Filled in after signing.
-        };
-
-        // The spend output is locked to a key controlled by the receiver.
-        let spend = TxOut {
-            value: SPEND_AMOUNT,
-            script_pubkey: address.script_pubkey(),
-        };
-
-        // The change output is locked to a key controlled by us.
-        let change = TxOut {
-            value: CHANGE_AMOUNT,
-            script_pubkey: ScriptBuf::new_p2wpkh(&wpkh), // Change comes back to us.
-        };
-
-        // The transaction we want to sign and broadcast.
-        let mut unsigned_tx = Transaction {
-            version: Version::TWO,       // Post BIP-68.
-            lock_time: LockTime::ZERO,   // Ignore the locktime.
-            input: vec![input],          // Input goes into index 0.
-            output: vec![spend, change], // Outputs, order does not matter.
-        };
-        let input_index = 0;
-
-        // Get the sighash to sign.
         let sighash_type = EcdsaSighashType::All;
-        let mut sighasher = SighashCache::new(&mut unsigned_tx);
-        let sighash = sighasher
-            .p2wpkh_signature_hash(
-                input_index,
-                &dummy_utxo.script_pubkey,
-                DUMMY_UTXO_AMOUNT,
+
+        let mut sighasher = SighashCache::new(&mut unsigned_txn);
+
+        //need to sign every input of the unsigned txn
+        for (input_index, utxo) in used_utxos.iter().enumerate() {
+            // Create SegwitV0Signhash
+            let sighash = sighasher
+                .p2wpkh_signature_hash(
+                    input_index,
+                    &ScriptBuf::new_p2wpkh(&wpkh),
+                    Amount::from_sat(utxo.value),
+                    sighash_type,
+                )
+                .expect("failed to create sighash");
+
+            // Sign the sighash using the secp256k1
+            let msg = Message::from(sighash);
+            let signature = secp.sign_ecdsa(&msg, &sk);
+
+            // Update the witness stack.
+            let signature = bitcoin::ecdsa::Signature {
+                signature,
                 sighash_type,
-            )
-            .expect("failed to create sighash");
-
-        // Sign the sighash using the secp256k1 library (exported by rust-bitcoin).
-        let msg = Message::from(sighash);
-        let signature = secp.sign_ecdsa(&msg, &sk);
-
-        // Update the witness stack.
-        let signature = bitcoin::ecdsa::Signature {
-            signature,
-            sighash_type,
-        };
-        let pk = sk.public_key(&secp);
-        *sighasher.witness_mut(input_index).unwrap() = Witness::p2wpkh(&signature, &pk);
+            };
+            let pk = sk.public_key(&secp);
+            *sighasher.witness_mut(input_index).unwrap() = Witness::p2wpkh(&signature, &pk);
+        }
 
         // Get the signed transaction.
-        let tx = sighasher.into_transaction();
+        let signed_txn: &mut Transaction = sighasher.into_transaction();
 
-        // BOOM! Transaction signed and ready to broadcast.
-        println!("{:#?}", tx);
+        let signed_txn_hash = serialize_hex(&signed_txn);
 
-        let x = serialize_hex(&tx);
-        println!("Signed Transaction: {}", x);
-        x
+        info!("Signed transaction hash: {}", signed_txn_hash);
+        signed_txn_hash
     }
 
-    // async fn sign_transaction(
-    //     &self,
-    //     mut unsigned_txn: Transaction,
-    //     utxos: Vec<BlockstreamUtxo>,
-    // ) -> Result<String, BtcApiError> {
-    //     let secp = Secp256k1::new();
+    async fn broadcast_transaction(&self, signed_txn_hash: String) -> Result<String, BtcApiError> {
+        info!("Broadcasting transaction: {}", signed_txn_hash);
 
-    //     let wif = "cSjgVro2xkCVat8fjye1jNfozoaC8XASd3UuvLXF49ugaZx1MHsg"; // Replace with your private key
-    //     let private_key = PrivateKey::from_wif(wif).expect("Invalid WIF key");
-    //     let public_key = private_key.public_key(&secp);
+        let url = self.rpc_url.join("tx")?;
 
-    //     let mut signatures = vec![];
-
-    //     {
-    //         let mut sighash_cache = SighashCache::new(&unsigned_txn);
-
-    //         for (i, utxo) in utxos.iter().enumerate() {
-    //             let pubkey = CompressedPublicKey::from_private_key(&secp, &private_key).unwrap();
-    //             println!("Pubkey: {:#?}", pubkey);
-    //             let address = Address::p2wpkh(&pubkey, Network::Testnet);
-    //             let script_pubkey = address.script_pubkey();
-    //             println!("Script Pubkey: {:#?}", script_pubkey);
-    //             println!("Address: {:#?}", address);
-
-    //             let sighash_msg = sighash_cache
-    //                 .p2wpkh_signature_hash(
-    //                     0,
-    //                     script_pubkey.as_script(),
-    //                     Amount::from_sat(utxo.value),
-    //                     bitcoin::EcdsaSighashType::All,
-    //                 )
-    //                 .unwrap();
-
-    //             let msg =
-    //                 Message::from_digest_slice(&sighash_msg[..]).expect("Failed to create message");
-
-    //             let sig = secp.sign_ecdsa(&msg, &private_key.inner);
-
-    //             let mut sig_with_sighash = sig.serialize_der().to_vec();
-    //             sig_with_sighash.push(bitcoin::EcdsaSighashType::All as u8);
-    //             signatures.push((i, sig_with_sighash, pubkey.to_bytes()));
-    //         }
-    //     }
-
-    //     println!("Signatures: {:#?}", signatures);
-    //     // 🔹 Apply Signatures to Transaction
-    //     for (i, sig, pubkey) in signatures {
-    //         unsigned_txn.input[i].witness.push(sig);
-    //         unsigned_txn.input[i].witness.push(pubkey);
-    //     }
-
-    //     println!("Signed Transaction: {:#?}", unsigned_txn);
-    //     let x = unsigned_txn.clone();
-    //     println!("Signed Transaction: {:#?}", serialize_hex(&x));
-    //     // 🔹 Serialize & Print Signed Transaction
-    //     let raw_tx_hex = serialize_hex(&unsigned_txn);
-    //     println!("Signed Transaction: {}", raw_tx_hex);
-
-    //     Ok(raw_tx_hex)
-    // }
-
-    async fn broadcast_transaction(&self, signed_txn_hash: String) -> Result<(), Box<dyn Error>> {
-        println!("Broadcasting transaction");
-        // 2️⃣ Blockstream API endpoint for Testnet
-        let url = "https://blockstream.info/testnet/api/tx";
-
-        // 3️⃣ Send the transaction using an HTTP POST request
         let client = Client::new();
         let response = client.post(url).body(signed_txn_hash).send().await?;
 
-        // 4️⃣ Print the Transaction ID (TxID)
-        println!(
-            "✅ Transaction broadcasted! TxID: {}",
-            response.text().await?
-        );
+        let response_text = response.text().await?;
 
-        Ok(())
+        info!("✅ Transaction broadcast result: {}", response_text);
+
+        Ok(response_text)
     }
 }
 
@@ -565,7 +476,7 @@ async fn test_get_raw_transaction() {
     let confirmed_txn_hash = "ce593556a4868d9ac26a860505a1c732aa38aea51d942505afc0b491c3b35f87";
     let cancelled_txn_hash = "69f8ab2bf2d82b3e5fd7626736d040d9c11d4ea3c31fb0c30bb0d72e8c5a6238";
 
-    let bitcoin = Bitcoin::new("https://xxx.xxx.xx", &ChainVariant::Mainnet);
+    let bitcoin = Bitcoin::new("https://xxx.xxx.xx", &ChainVariant::Mainnet).unwrap();
 
     let pending_txn_result = bitcoin
         .get_raw_transaction(pending_txn_hash.to_string())
@@ -595,7 +506,7 @@ async fn test_find_spendable_utxos() {
     // Comment out pending txn hash if needed. It might be confirmed by the time you run the test.
     let wallet_address = "mrZ8L1SgPERaUXbrLrT2dxkfKBYk5RzmB9";
 
-    let bitcoin = Bitcoin::new("https://xxx.xxx.xx", &ChainVariant::Testnet);
+    let bitcoin = Bitcoin::new("https://xxx.xxx.xx", &ChainVariant::Testnet).unwrap();
 
     let available_utxos = bitcoin
         .find_spendable_utxos(wallet_address.to_string())

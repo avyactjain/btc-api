@@ -5,5 +5,5 @@
         "variant": "Testnet",
         "rpc_url": "https://blockstream.info/testnet/api/"
     },
-    "rust_log_level": "debug"
+    "rust_log_level": "info"
 }

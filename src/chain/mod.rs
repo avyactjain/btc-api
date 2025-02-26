@@ -2,8 +2,8 @@ use axum::Json;
 use serde::Deserialize;
 
 use crate::models::{
-    CreateTransactionParams, CreateTransactionResponse, NetworkFeeResponse,
-    ValidateTransactionHashResponse,
+    BroadcastTransactionParams, BroadcastTransactionResponse, CreateTransactionParams,
+    CreateTransactionResponse, NetworkFeeResponse, ValidateTransactionHashResponse,
 };
 
 #[derive(Deserialize, Debug)]
@@ -23,4 +23,8 @@ pub trait Chain {
         &self,
         transaction: CreateTransactionParams,
     ) -> Json<CreateTransactionResponse>;
+    async fn broadcast_transaction(
+        &self,
+        transaction: BroadcastTransactionParams,
+    ) -> Json<BroadcastTransactionResponse>;
 }

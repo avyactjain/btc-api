@@ -296,9 +296,8 @@ mod tests {
 
         let deserialized_json = serde_json::from_str::<Vec<BlockstreamUtxo>>(json);
         assert!(deserialized_json.is_ok()); // Successfully deserialized response from blockstream ✅
-        assert_eq!(
-            deserialized_json.unwrap().get(0).unwrap().is_confirmed(),
-            true
+        assert!(
+            deserialized_json.unwrap().first().unwrap().is_confirmed()
         );
     }
 }
