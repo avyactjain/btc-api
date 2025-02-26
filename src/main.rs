@@ -8,7 +8,8 @@ use btc_api_error::BtcApiError;
 use chain::ChainName;
 use handlers::{
     bitcoin_broadcast_transaction_handler, bitcoin_create_transaction_handler,
-    bitcoin_network_fee_handler, bitcoin_validate_transaction_hash_handler, method_not_allowed_handler,
+    bitcoin_network_fee_handler, bitcoin_validate_transaction_hash_handler,
+    method_not_allowed_handler,
 };
 
 use tracing::info;
@@ -18,6 +19,8 @@ mod chain;
 mod config;
 mod handlers;
 mod models;
+
+struct ApiDoc;
 
 #[tokio::main]
 async fn main() -> Result<(), BtcApiError> {

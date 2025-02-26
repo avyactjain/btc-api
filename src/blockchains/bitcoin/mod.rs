@@ -114,7 +114,7 @@ impl Chain for Bitcoin {
                     .sign_transaction(transaction.clone(), used_utxos.clone())
                     .await;
 
-                self.broadcast_transaction(signed_txn_hash).await.unwrap();
+                // self.broadcast_transaction(signed_txn_hash).await.unwrap();
 
                 result.is_error = false;
                 result.data = Some(CreateTransactionResponseData {
@@ -373,10 +373,16 @@ impl Bitcoin {
             }
         }
 
+        if total_expenditure > total_utxo_value {
+            return Err(BtcApiError::InsufficientFunds(
+                total_expenditure - total_utxo_value,
+            ));
+        }
+
         Ok((
             inputs.to_vec(),
             used_utxos,
-            total_utxo_value - total_expenditure,
+            (total_utxo_value - total_expenditure),
         ))
     }
 

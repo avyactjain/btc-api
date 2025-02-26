@@ -11,6 +11,7 @@ pub enum BtcApiError {
     BitcoinParseAddressError(bitcoin::address::ParseError),
     UrlParseError(url::ParseError),
     NoUtxosFound(String),
+    InsufficientFunds(u64),
 }
 
 impl From<reqwest::Error> for BtcApiError {
@@ -67,6 +68,9 @@ impl std::fmt::Display for BtcApiError {
             }
             BtcApiError::UrlParseError(e) => write!(f, "UrlParseError: {}", e),
             BtcApiError::NoUtxosFound(address) => write!(f, "NoUtxosFound for Address:{}", address),
+            BtcApiError::InsufficientFunds(amount) => {
+                write!(f, "InsufficientFunds: {}", amount)
+            }
         }
     }
 }

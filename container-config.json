@@ -1,5 +1,5 @@
 {
-    "listen_address": "0.0.0.0:3006",
+    "listen_address": "0.0.0.0:3005",
     "chain_config": {
         "chain": "bitcoin",
         "variant": "Testnet",
