@@ -9,7 +9,8 @@ use crate::{
     models::{
         BroadcastTransactionParams, BroadcastTransactionResponse, CreateTransactionParams,
         CreateTransactionResponse, MethodNotAllowedResponse, NetworkFeeResponse,
-        ValidateTransactionHashParams, ValidateTransactionHashResponse,
+        ValidateTransactionHashParams, ValidateTransactionHashResponse, WalletBalanceParams,
+        WalletBalanceResponse,
     },
 };
 
@@ -47,6 +48,15 @@ pub(crate) async fn bitcoin_validate_transaction_hash_handler(
         .await
 }
 
+#[axum::debug_handler]
+pub(crate) async fn bitcoin_wallet_balance_handler(
+    Query(params): Query<WalletBalanceParams>,
+    State(blockchain): State<BlockchainWrapper<Bitcoin>>,
+) -> Json<WalletBalanceResponse> {
+    debug!("Received request to fetch wallet balance: {:#?}", params);
+
+    blockchain.get_wallet_balance(params.wallet_address).await
+}
 #[axum::debug_handler]
 pub(crate) async fn bitcoin_create_transaction_handler(
     State(blockchain): State<BlockchainWrapper<Bitcoin>>,

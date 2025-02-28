@@ -9,7 +9,7 @@ use chain::ChainName;
 use handlers::{
     bitcoin_broadcast_transaction_handler, bitcoin_create_transaction_handler,
     bitcoin_network_fee_handler, bitcoin_validate_transaction_hash_handler,
-    method_not_allowed_handler,
+    bitcoin_wallet_balance_handler, method_not_allowed_handler,
 };
 
 use tracing::info;
@@ -55,6 +55,7 @@ async fn main() -> Result<(), BtcApiError> {
             "/broadcastTransaction",
             post(bitcoin_broadcast_transaction_handler),
         )
+        .route("/walletBalance", get(bitcoin_wallet_balance_handler))
         .method_not_allowed_fallback(method_not_allowed_handler)
         .with_state(blockchain);
 

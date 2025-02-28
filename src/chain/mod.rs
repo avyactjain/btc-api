@@ -4,6 +4,7 @@ use serde::Deserialize;
 use crate::models::{
     BroadcastTransactionParams, BroadcastTransactionResponse, CreateTransactionParams,
     CreateTransactionResponse, NetworkFeeResponse, ValidateTransactionHashResponse,
+    WalletBalanceResponse,
 };
 
 #[derive(Deserialize, Debug)]
@@ -28,4 +29,5 @@ pub trait Chain {
         &self,
         transaction: BroadcastTransactionParams,
     ) -> Json<BroadcastTransactionResponse>;
+    async fn get_wallet_balance(&self, address: String) -> Json<WalletBalanceResponse>;
 }

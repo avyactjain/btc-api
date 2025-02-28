@@ -134,6 +134,32 @@ impl BlockstreamUtxo {
     }
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct BlockstreamWalletBalance {
+    address: String,
+    chain_stats: Stats,
+    mempool_stats: Stats,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Stats {
+    funded_txo_count: u64,
+    funded_txo_sum: i64,
+    spent_txo_count: u64,
+    spent_txo_sum: i64,
+    tx_count: u64,
+}
+
+impl BlockstreamWalletBalance {
+    pub fn get_confirmed_balance(&self) -> i64 {
+        self.chain_stats.funded_txo_sum - self.chain_stats.spent_txo_sum
+    }
+
+    pub fn get_unconfirmed_balance(&self) -> i64 {
+        self.mempool_stats.funded_txo_sum - self.mempool_stats.spent_txo_sum
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*; // Import functions from parent module
@@ -296,8 +322,6 @@ mod tests {
 
         let deserialized_json = serde_json::from_str::<Vec<BlockstreamUtxo>>(json);
         assert!(deserialized_json.is_ok()); // Successfully deserialized response from blockstream ✅
-        assert!(
-            deserialized_json.unwrap().first().unwrap().is_confirmed()
-        );
+        assert!(deserialized_json.unwrap().first().unwrap().is_confirmed());
     }
 }

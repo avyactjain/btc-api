@@ -3,7 +3,7 @@ pub enum BtcApiError {
     ConfigLoadError(String),
     ReqwestError(reqwest::Error),
     SerdeJsonError(serde_json::Error),
-    InvalidResponse(String),
+    InvalidBroadcastResponse(String),
     UnableToVerifyTxnStatus,
     ExternalApiError(String),
     InvalidFee(String),
@@ -12,6 +12,7 @@ pub enum BtcApiError {
     UrlParseError(url::ParseError),
     NoUtxosFound(String),
     InsufficientFunds(u64),
+    RegexError(regex::Error),
 }
 
 impl From<reqwest::Error> for BtcApiError {
@@ -28,7 +29,7 @@ impl From<serde_json::Error> for BtcApiError {
 
 impl From<String> for BtcApiError {
     fn from(error: String) -> Self {
-        BtcApiError::InvalidResponse(error)
+        BtcApiError::InvalidBroadcastResponse(error)
     }
 }
 
@@ -50,13 +51,19 @@ impl From<url::ParseError> for BtcApiError {
     }
 }
 
+impl From<regex::Error> for BtcApiError {
+    fn from(error: regex::Error) -> Self {
+        BtcApiError::RegexError(error)
+    }
+}
+
 impl std::fmt::Display for BtcApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             BtcApiError::ConfigLoadError(e) => write!(f, "ConfigLoadError: {}", e),
             BtcApiError::ReqwestError(e) => write!(f, "ReqwestError: {}", e),
             BtcApiError::SerdeJsonError(e) => write!(f, "SerdeJsonError: {}", e),
-            BtcApiError::InvalidResponse(e) => write!(f, "InvalidResponse: {}", e),
+            BtcApiError::InvalidBroadcastResponse(e) => write!(f, "InvalidResponse: {}", e),
             BtcApiError::UnableToVerifyTxnStatus => write!(f, "UnableToVerifyTxnStatus"),
             BtcApiError::ExternalApiError(e) => write!(f, "ExternalApiError: {}", e),
             BtcApiError::InvalidFee(e) => write!(f, "InvalidFee: {}", e),
@@ -71,6 +78,7 @@ impl std::fmt::Display for BtcApiError {
             BtcApiError::InsufficientFunds(amount) => {
                 write!(f, "InsufficientFunds: {}", amount)
             }
+            BtcApiError::RegexError(e) => write!(f, "RegexError: {}", e),
         }
     }
 }

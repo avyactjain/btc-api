@@ -5,6 +5,7 @@ use crate::{
     models::{
         BroadcastTransactionParams, BroadcastTransactionResponse, CreateTransactionParams,
         CreateTransactionResponse, NetworkFeeResponse, ValidateTransactionHashResponse,
+        WalletBalanceResponse,
     },
 };
 
@@ -43,5 +44,9 @@ impl<T: Chain> BlockchainWrapper<T> {
         transaction: BroadcastTransactionParams,
     ) -> Json<BroadcastTransactionResponse> {
         self.0.broadcast_transaction(transaction).await
+    }
+
+    pub async fn get_wallet_balance(&self, address: String) -> Json<WalletBalanceResponse> {
+        self.0.get_wallet_balance(address).await
     }
 }

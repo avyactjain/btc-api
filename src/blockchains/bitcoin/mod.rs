@@ -8,12 +8,14 @@ use bitcoin::{
 };
 
 use bitcoin::blockdata::transaction::Transaction;
+use regex::Regex;
 use reqwest::{Client, Url};
-use response_models::{BlockchaincomResponse, BlockstreamUtxo};
+use response_models::{BlockchaincomResponse, BlockstreamUtxo, BlockstreamWalletBalance};
 use tracing::{debug, error, info};
 use utils::senders_keys;
 pub(crate) mod response_models;
 
+use crate::models::{WalletBalanceResponse, WalletBalanceResponseData};
 use crate::{
     btc_api_error::BtcApiError,
     chain::Chain,
@@ -31,11 +33,19 @@ mod utils;
 const MEMPOOL_API_NETWORK_FEE_URL: &str = "https://mempool.space/api/v1/fees/recommended";
 // Blockchain API for raw transaction, always mainnet
 const BLOCKCHAIN_API_RAW_TRANSACTION_URL: &str = "https://blockchain.info/rawtx/";
+// Bitcoin txid regex
+const BITCOIN_TXID_REGEX: &str = r"^[a-fA-F0-9]{64}$";
+// Blockstream Testnet Explorer URL
+const BLOCKSTREAM_TESTNET_EXPLORER_URL: &str = "https://blockstream.info/testnet/";
+// Blockstream Mainnet Explorer URL
+const BLOCKSTREAM_MAINNET_EXPLORER_URL: &str = "https://blockstream.info/";
 
 #[derive(Debug, Clone)]
 pub struct Bitcoin {
     pub rpc_url: Url,
     pub network: Network,
+    pub bitcoin_txid_regex: Regex,
+    pub explorer_url: Url,
 }
 
 impl Chain for Bitcoin {
@@ -142,12 +152,33 @@ impl Chain for Bitcoin {
 
         match self.broadcast_transaction(transaction.signed_raw_txn).await {
             Ok(broadcase_api_response) => {
-                result.data = Some(BroadcastTransactionResponseData {
-                    response: broadcase_api_response,
-                });
+                result.data = Some(broadcase_api_response);
             }
             Err(err) => {
                 result.is_error = true;
+                result.error_msg = Some(err.to_string());
+            }
+        }
+
+        Json(result)
+    }
+
+    async fn get_wallet_balance(
+        &self,
+        address: String,
+    ) -> Json<crate::models::WalletBalanceResponse> {
+        let mut result = WalletBalanceResponse {
+            is_error: true,
+            data: None,
+            error_msg: None,
+        };
+
+        match self.get_wallet_balance(address).await {
+            Ok(wallet_balance) => {
+                result.is_error = false;
+                result.data = Some(wallet_balance);
+            }
+            Err(err) => {
                 result.error_msg = Some(err.to_string());
             }
         }
@@ -158,9 +189,9 @@ impl Chain for Bitcoin {
 
 impl Bitcoin {
     pub fn new(rpc_url: &str, variant: &ChainVariant) -> Result<Self, BtcApiError> {
-        let network = match variant {
-            ChainVariant::Mainnet => Network::Bitcoin,
-            ChainVariant::Testnet => Network::Testnet,
+        let (network, explorer_url) = match variant {
+            ChainVariant::Mainnet => (Network::Bitcoin, BLOCKSTREAM_MAINNET_EXPLORER_URL),
+            ChainVariant::Testnet => (Network::Testnet, BLOCKSTREAM_TESTNET_EXPLORER_URL),
         };
 
         info!(
@@ -171,6 +202,34 @@ impl Bitcoin {
         Ok(Self {
             rpc_url: rpc_url.parse::<Url>()?,
             network,
+            bitcoin_txid_regex: Regex::new(BITCOIN_TXID_REGEX)?,
+            explorer_url: explorer_url.parse::<Url>()?,
+        })
+    }
+
+    async fn get_wallet_balance(
+        &self,
+        address: String,
+    ) -> Result<WalletBalanceResponseData, BtcApiError> {
+        let url = self.rpc_url.join(&format!("address/{}", address))?;
+
+        let blockstream_response = reqwest::get(url).await?.text().await?;
+
+        let blockstream_wallet_balance =
+            serde_json::from_str::<BlockstreamWalletBalance>(&blockstream_response)?;
+
+        // This can be negative also if the wallet has more unconfirmedincoming transactions than outgoing
+        let confirmed_balance = blockstream_wallet_balance.get_confirmed_balance();
+
+        // This can be negative also if the wallet has more unconfirmed outgoing transactions than incoming
+        let unconfirmed_balance = blockstream_wallet_balance.get_unconfirmed_balance();
+
+        let total_balance = confirmed_balance + unconfirmed_balance;
+
+        Ok(WalletBalanceResponseData {
+            confirmed_balance,
+            unconfirmed_balance: unconfirmed_balance,
+            total_balance,
         })
     }
 
@@ -206,14 +265,13 @@ impl Bitcoin {
                         let result = ValidateTransactionHashResponseData {
                             txn_hash: transaction_hash,
                             txn_status: TxnStatus::Cancelled,
+                            txn_status_flag: 1,
                             txn_data: Some(TxnData {
                                 block_index: None,
                                 block_height: None,
-                                consumed_fees_in_satoshis: blockchaincom_raw_txn.get_total_fee(),
-                                txn_input_amount_in_satoshis: blockchaincom_raw_txn
-                                    .get_total_input_amount(),
-                                txn_output_amount_in_satoshis: blockchaincom_raw_txn
-                                    .get_total_output_amount(),
+                                consumed_fees: blockchaincom_raw_txn.get_total_fee(),
+                                txn_input_amount: blockchaincom_raw_txn.get_total_input_amount(),
+                                txn_output_amount: blockchaincom_raw_txn.get_total_output_amount(),
                                 input_txns: blockchaincom_raw_txn.get_input_txns(),
                                 output_txns: blockchaincom_raw_txn.get_output_txns(),
                             }),
@@ -232,14 +290,13 @@ impl Bitcoin {
                         let result = ValidateTransactionHashResponseData {
                             txn_hash: transaction_hash,
                             txn_status: TxnStatus::Confirmed,
+                            txn_status_flag: 0,
                             txn_data: Some(TxnData {
                                 block_index: Some(block_index),
                                 block_height: Some(block_height),
-                                consumed_fees_in_satoshis: blockchaincom_raw_txn.get_total_fee(),
-                                txn_input_amount_in_satoshis: blockchaincom_raw_txn
-                                    .get_total_input_amount(),
-                                txn_output_amount_in_satoshis: blockchaincom_raw_txn
-                                    .get_total_output_amount(),
+                                consumed_fees: blockchaincom_raw_txn.get_total_fee(),
+                                txn_input_amount: blockchaincom_raw_txn.get_total_input_amount(),
+                                txn_output_amount: blockchaincom_raw_txn.get_total_output_amount(),
                                 input_txns: blockchaincom_raw_txn.get_input_txns(),
                                 output_txns: blockchaincom_raw_txn.get_output_txns(),
                             }),
@@ -258,14 +315,13 @@ impl Bitcoin {
                         let result = ValidateTransactionHashResponseData {
                             txn_hash: transaction_hash,
                             txn_status: TxnStatus::Pending,
+                            txn_status_flag: 2,
                             txn_data: Some(TxnData {
                                 block_index: None,
                                 block_height: None,
-                                consumed_fees_in_satoshis: blockchaincom_raw_txn.get_total_fee(),
-                                txn_input_amount_in_satoshis: blockchaincom_raw_txn
-                                    .get_total_input_amount(),
-                                txn_output_amount_in_satoshis: blockchaincom_raw_txn
-                                    .get_total_output_amount(),
+                                consumed_fees: blockchaincom_raw_txn.get_total_fee(),
+                                txn_input_amount: blockchaincom_raw_txn.get_total_input_amount(),
+                                txn_output_amount: blockchaincom_raw_txn.get_total_output_amount(),
                                 input_txns: blockchaincom_raw_txn.get_input_txns(),
                                 output_txns: blockchaincom_raw_txn.get_output_txns(),
                             }),
@@ -452,7 +508,10 @@ impl Bitcoin {
         signed_txn_hash
     }
 
-    async fn broadcast_transaction(&self, signed_txn_hash: String) -> Result<String, BtcApiError> {
+    async fn broadcast_transaction(
+        &self,
+        signed_txn_hash: String,
+    ) -> Result<BroadcastTransactionResponseData, BtcApiError> {
         info!("Broadcasting transaction: {}", signed_txn_hash);
 
         let url = self.rpc_url.join("tx")?;
@@ -462,9 +521,20 @@ impl Bitcoin {
 
         let response_text = response.text().await?;
 
-        info!("✅ Transaction broadcast result: {}", response_text);
+        //Check if the response text is a hash
+        if self.bitcoin_txid_regex.is_match(&response_text) {
+            info!("✅ Transaction broadcast result: {}", response_text);
 
-        Ok(response_text)
+            //Valid txid, transaction broadcasted successfully
+            let explorer_url = self.explorer_url.join(&format!("tx/{}", response_text))?;
+
+            Ok(BroadcastTransactionResponseData {
+                txn_hash: response_text,
+                txn_hash_url: explorer_url.to_string(),
+            })
+        } else {
+            return Err(BtcApiError::InvalidBroadcastResponse(response_text));
+        }
     }
 }
 

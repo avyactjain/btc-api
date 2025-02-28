@@ -26,6 +26,11 @@ pub struct ValidateTransactionHashParams {
     pub transaction_hash: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct WalletBalanceParams {
+    pub wallet_address: String,
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ValidateTransactionHashResponse {
@@ -39,6 +44,11 @@ pub struct ValidateTransactionHashResponse {
 pub struct ValidateTransactionHashResponseData {
     pub txn_hash: String,
     pub txn_status: TxnStatus,
+    // This is a flag to indicate if the transaction is confirmed, cancelled or pending
+    // 0: Confirmed
+    // 1: Cancelled
+    // 2: Pending
+    pub txn_status_flag: u64,
     pub txn_data: Option<TxnData>,
 }
 
@@ -53,9 +63,9 @@ pub enum TxnStatus {
 pub struct TxnData {
     pub block_index: Option<u64>,
     pub block_height: Option<u64>,
-    pub consumed_fees_in_satoshis: u64,
-    pub txn_input_amount_in_satoshis: u64,
-    pub txn_output_amount_in_satoshis: u64,
+    pub consumed_fees: u64,
+    pub txn_input_amount: u64,
+    pub txn_output_amount: u64,
     pub input_txns: Vec<AddressSpent>,
     pub output_txns: Vec<AddressSpent>,
 }
@@ -116,7 +126,8 @@ pub struct BroadcastTransactionResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BroadcastTransactionResponseData {
-    pub response: String,
+    pub txn_hash: String,
+    pub txn_hash_url: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -125,6 +136,19 @@ pub struct MethodNotAllowedResponse {
     pub error_msg: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WalletBalanceResponse {
+    pub is_error: bool,
+    pub data: Option<WalletBalanceResponseData>,
+    pub error_msg: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WalletBalanceResponseData {
+    pub confirmed_balance: i64,
+    pub unconfirmed_balance: i64,
+    pub total_balance: i64,
+}
 mod test {
     use crate::models::CreateTransactionParams;
 

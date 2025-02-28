@@ -36,6 +36,7 @@ pub fn create_testnet_wallet() -> (PrivateKey, Address) {
 // This function is used to get the secret key and the witness public key hash of the sender.
 // Warning : Actual keys of a bitcoin wallet.
 pub fn senders_keys<C: Signing>(secp: &Secp256k1<C>) -> (SecretKey, WPubkeyHash) {
+    
     let private_key = PrivateKey::from_wif("cSjgVro2xkCVat8fjye1jNfozoaC8XASd3UuvLXF49ugaZx1MHsg")
         .expect("invalid wif");
     let sk = private_key.inner;
