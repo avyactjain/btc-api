@@ -1,4 +1,4 @@
-FROM rust:1.80
+FROM rust:1.81
 
 # Create app directory
 WORKDIR /app
