@@ -16,6 +16,8 @@ pub(crate) struct Config {
     #[serde(default = "default_log_level")]
     #[serde(with = "log_level_serde")]
     pub rust_log_level: Level,
+    #[serde(default)]
+    pub sign_txn: bool,
 }
 
 fn default_log_level() -> Level {

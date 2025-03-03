@@ -49,7 +49,7 @@ pub struct ValidateTransactionHashResponseData {
     // 1: Cancelled
     // 2: Pending
     pub txn_status_flag: u64,
-    pub txn_data: Option<TxnData>,
+    pub txn_data: Option<TransactionData>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -60,7 +60,7 @@ pub enum TxnStatus {
     Pending,
 }
 #[derive(Serialize, Deserialize)]
-pub struct TxnData {
+pub struct TransactionData {
     pub block_index: Option<u64>,
     pub block_height: Option<u64>,
     pub consumed_fees: u64,

@@ -1,14 +1,17 @@
 # BTC-API
 
-A REST API service for interacting with Bitcoin and other blockchain networks.
+A REST API service for interacting with Bitcoin blockchain network.
 
 ## Features
 
-- Network fee estimation endpoint
-- Configurable blockchain support
-- Async runtime with Tokio
+- Fetching wallet balances
+- Estimating network fees
+- Validating transactions
+- Creating new transactions
+- Broadcasting new transactions 
 - Error handling with custom error types
 - Tracing for logging and diagnostics
+- Swagger OpenApi documentation out of the box for testing
 
 ## Getting Started
 
@@ -54,97 +57,12 @@ A REST API service for interacting with Bitcoin and other blockchain networks.
 
 4. Access the API:
     ```bash
-    curl http://localhost:3002/api/v1/network-fee
+    curl http://127.0.0.1:3002/network-fee
     ``` 
 
 ## API Endpoints
 
-### Get Network Fee
-
-    ```bash
-    curl http://localhost:3005/networkFee
-    ``` 
-
-    Response:
-    ```json
-    {
-        "isError": false,
-        "data": {
-            "fastestFee": 1000,
-            "halfHourFee": 500,
-            "hourFee": 250,
-            "economyFee": 100,
-            "minimumFee": 1
-        }
-    }
-    ```
-
-    Error Response:
-    ```json
-    {
-        "isError": true,
-        "errorMsg": "Error message"
-    }
-    ```                 
-
-### Validate Transaction Hash
-
-    ```bash
-    curl "http://localhost:3005/validateTransactionHash?transaction_hash=69f8ab2bf2d82b3e5fd7626736d040d9c11d4ea3c31fb0c30bb0d72e8c5a6238"
-    ```  
-
-      Response:
-    ```json
-   {
-    "isError": false,
-    "data": {
-        "txnHash": "69f8ab2bf2d82b3e5fd7626736d040d9c11d4ea3c31fb0c30bb0d72e8c5a6238",
-        "txnStatus": "cancelled",
-        "txnData": {
-            "block_index": null,
-            "block_height": null,
-            "consumed_fees_in_satoshis": 5220,
-            "txn_input_amount_in_satoshis": 123497,
-            "txn_output_amount_in_satoshis": 118277,
-            "input_txns": [
-                {
-                    "address": "3LPwjGtU2gfY5kSAAj44Y62pjTFvAHp9L2",
-                    "amount": 104000
-                },
-                {
-                    "address": "3LPwjGtU2gfY5kSAAj44Y62pjTFvAHp9L2",
-                    "amount": 10443
-                },
-                {
-                    "address": "3LPwjGtU2gfY5kSAAj44Y62pjTFvAHp9L2",
-                    "amount": 9054
-                }
-            ],
-            "output_txns": [
-                {
-                    "address": "32SSfvCfRaSB8XzBLTHx8XHRxnZdJTBdVQ",
-                    "amount": 115000
-                },
-                {
-                    "address": "3LPwjGtU2gfY5kSAAj44Y62pjTFvAHp9L2",
-                    "amount": 3277
-                }
-            ]
-        }
-    },
-    "errorMsg": null
-    }
-    ```
-
-    Error Response:
-    ```json
-   {
-    "isError": true,
-    "data": null,
-    "errorMsg": "SerdeJsonError: missing field `hash` at line 1 column 83"
-    }   
-    ```                 
-
+Refer to the Swagger OpenApi documentation hosted at `http://127.0.0.1:3002/docs`
 
 ## Configuration
 
@@ -154,23 +72,29 @@ The configuration file is as follows:
 
 ```json
 {
-    "listenAddress": "127.0.0.1:3002",
-    "blockchainConfig": {
+    "listen_address": "127.0.0.1:3002",
+    "chain_config": {
         "chain": "bitcoin",
-        "chainId": 1,
-        "rpcUrl": "http://127.0.0.1:8332"
-    }
+        "variant": "Testnet",
+        "rpc_url": "https://blockstream.info/testnet/api/"
+    },
+    "rust_log_level": "info", 
+    "sign_txn": true
 }
 ```
+
+| Config Field  | Meaning  | Possible value(s)|
+|----------|---------|------------|
+| listen_address   | ✅ The address on which the API will be listening.  | 127.0.0.1:3002 |
+| chain   | The related chain. Only bitcoin is supported as of now | bitcoin  |
+| variant   | Vairant of the chain | mainnet, testnet  |
+| rpc_url   | The RPC URL of the underlying chain. only blockstream is supported as of now. | https://blockstream.info/testnet/api/
+| sign_txn   | Whether to sign the txn or not using the wallet defined in `src/blockchains/bitcoin/utils.rs` | 
+
+
 
 ## Error Handling
 
 The API uses custom error types to handle errors. The error types are defined in the `src/error.rs` file.
 
-The error types are as follows:
-
-```rust
-pub enum BtcApiError {
-    ConfigLoadError(String),
-}
-```
+For suggestions/feedbacks, contact : https://t.me/avyact_jain

@@ -15,7 +15,7 @@ use tracing::{debug, error, info};
 use utils::senders_keys;
 pub(crate) mod response_models;
 
-use crate::models::{WalletBalanceResponse, WalletBalanceResponseData};
+use crate::models::{TransactionData, WalletBalanceResponse, WalletBalanceResponseData};
 use crate::{
     btc_api_error::BtcApiError,
     chain::Chain,
@@ -23,7 +23,7 @@ use crate::{
     models::{
         BroadcastTransactionResponse, BroadcastTransactionResponseData, CreateTransactionParams,
         CreateTransactionResponse, CreateTransactionResponseData, NetworkFeeResponse,
-        NetworkFeeResponseData, TxnData, TxnStatus, ValidateTransactionHashResponse,
+        NetworkFeeResponseData, TxnStatus, ValidateTransactionHashResponse,
         ValidateTransactionHashResponseData,
     },
 };
@@ -46,6 +46,7 @@ pub struct Bitcoin {
     pub network: Network,
     pub bitcoin_txid_regex: Regex,
     pub explorer_url: Url,
+    pub sign_txn: bool,
 }
 
 impl Chain for Bitcoin {
@@ -120,9 +121,11 @@ impl Chain for Bitcoin {
 
         match self.create_transaction(transaction_params).await {
             Ok((transaction, used_utxos)) => {
-                let signed_txn_hash = self
-                    .sign_transaction(transaction.clone(), used_utxos.clone())
-                    .await;
+                if self.sign_txn {
+                    let signed_txn_hash = self
+                        .sign_transaction(transaction.clone(), used_utxos.clone())
+                        .await;
+                }
 
                 // self.broadcast_transaction(signed_txn_hash).await.unwrap();
 
@@ -188,7 +191,7 @@ impl Chain for Bitcoin {
 }
 
 impl Bitcoin {
-    pub fn new(rpc_url: &str, variant: &ChainVariant) -> Result<Self, BtcApiError> {
+    pub fn new(rpc_url: &str, variant: &ChainVariant, sign_txn: bool) -> Result<Self, BtcApiError> {
         let (network, explorer_url) = match variant {
             ChainVariant::Mainnet => (Network::Bitcoin, BLOCKSTREAM_MAINNET_EXPLORER_URL),
             ChainVariant::Testnet => (Network::Testnet, BLOCKSTREAM_TESTNET_EXPLORER_URL),
@@ -204,6 +207,7 @@ impl Bitcoin {
             network,
             bitcoin_txid_regex: Regex::new(BITCOIN_TXID_REGEX)?,
             explorer_url: explorer_url.parse::<Url>()?,
+            sign_txn,
         })
     }
 
@@ -266,7 +270,7 @@ impl Bitcoin {
                             txn_hash: transaction_hash,
                             txn_status: TxnStatus::Cancelled,
                             txn_status_flag: 1,
-                            txn_data: Some(TxnData {
+                            txn_data: Some(TransactionData {
                                 block_index: None,
                                 block_height: None,
                                 consumed_fees: blockchaincom_raw_txn.get_total_fee(),
@@ -291,7 +295,7 @@ impl Bitcoin {
                             txn_hash: transaction_hash,
                             txn_status: TxnStatus::Confirmed,
                             txn_status_flag: 0,
-                            txn_data: Some(TxnData {
+                            txn_data: Some(TransactionData {
                                 block_index: Some(block_index),
                                 block_height: Some(block_height),
                                 consumed_fees: blockchaincom_raw_txn.get_total_fee(),
@@ -316,7 +320,7 @@ impl Bitcoin {
                             txn_hash: transaction_hash,
                             txn_status: TxnStatus::Pending,
                             txn_status_flag: 2,
-                            txn_data: Some(TxnData {
+                            txn_data: Some(TransactionData {
                                 block_index: None,
                                 block_height: None,
                                 consumed_fees: blockchaincom_raw_txn.get_total_fee(),
@@ -546,7 +550,7 @@ async fn test_get_raw_transaction() {
     let confirmed_txn_hash = "ce593556a4868d9ac26a860505a1c732aa38aea51d942505afc0b491c3b35f87";
     let cancelled_txn_hash = "69f8ab2bf2d82b3e5fd7626736d040d9c11d4ea3c31fb0c30bb0d72e8c5a6238";
 
-    let bitcoin = Bitcoin::new("https://xxx.xxx.xx", &ChainVariant::Mainnet).unwrap();
+    let bitcoin = Bitcoin::new("https://xxx.xxx.xx", &ChainVariant::Mainnet, false).unwrap();
 
     let pending_txn_result = bitcoin
         .get_raw_transaction(pending_txn_hash.to_string())
@@ -576,7 +580,7 @@ async fn test_find_spendable_utxos() {
     // Comment out pending txn hash if needed. It might be confirmed by the time you run the test.
     let wallet_address = "mrZ8L1SgPERaUXbrLrT2dxkfKBYk5RzmB9";
 
-    let bitcoin = Bitcoin::new("https://xxx.xxx.xx", &ChainVariant::Testnet).unwrap();
+    let bitcoin = Bitcoin::new("https://xxx.xxx.xx", &ChainVariant::Testnet, false).unwrap();
 
     let available_utxos = bitcoin
         .find_spendable_utxos(wallet_address.to_string())

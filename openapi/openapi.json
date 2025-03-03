@@ -1,0 +1,417 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Bitcoin Transaction API",
+    "description": "REST API for interacting with the Bitcoin network, including:\n  - Fetching wallet balances\n  - Estimating network fees\n  - Validating transactions\n  - Creating new transactions\n  - Broadcasting new transactions\n.\nThe underlying network (Mainnet/Testnet) for this API depends on the configuration of the running application.\n",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "{protocol}://{host}:{port}",
+      "description": "Your local Development server",
+      "variables": {
+        "protocol": {
+          "enum": [
+            "http",
+            "https"
+          ],
+          "default": "http"
+        },
+        "host": {
+          "default": "localhost"
+        },
+        "port": {
+          "default": "3002"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/walletBalance": {
+      "get": {
+        "summary": "Retrieve Bitcoin Wallet Balance",
+        "description": "Fetches the confirmed, unconfirmed, and total balance of a Bitcoin wallet \nusing Blockstream API.\n",
+        "parameters": [
+          {
+            "name": "wallet_address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The Bitcoin wallet address (Testnet or Mainnet) for which the balance is being queried.\n"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved wallet balance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletBalanceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/networkFee": {
+      "get": {
+        "summary": "Retrieve Current Bitcoin Network Fee Estimates",
+        "description": "Provides estimated fee rates for different transaction confirmation times, \nbased on data from mempool.space.\n",
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved network fee estimates.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkFeeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/validateTransactionHash": {
+      "get": {
+        "summary": "Validate Bitcoin Transaction Status",
+        "description": "Checks the status of a given Bitcoin transaction hash, indicating whether \nit is pending, confirmed, or cancelled.\n",
+        "parameters": [
+          {
+            "name": "transaction_hash",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The transaction hash (txid) to validate."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved transaction status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateTransactionHashResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/createTransaction": {
+      "post": {
+        "summary": "Create a New Unsigned Bitcoin Transaction",
+        "description": "Generates an unsigned Bitcoin transaction using available UTXOs, \nsender and recipient addresses, and the specified amount and fee.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransactionParams"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully created an unsigned Bitcoin transaction.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTransactionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/broadcastTransaction": {
+      "post": {
+        "summary": "Broadcast a Signed Bitcoin Transaction",
+        "description": "Submits a signed Bitcoin transaction to the network for processing and confirmation.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BroadcastTransactionParams"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully broadcasted the transaction to the Bitcoin network.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BroadcastTransactionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "NetworkFeeResponse": {
+        "type": "object",
+        "properties": {
+          "is_error": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "fastestFee": {
+                "type": "integer",
+                "description": "Fee rate for fastest confirmation (sats/vB)"
+              },
+              "halfHourFee": {
+                "type": "integer",
+                "description": "Fee rate for confirmation within 30 minutes (sats/vB)"
+              },
+              "hourFee": {
+                "type": "integer",
+                "description": "Fee rate for confirmation within 1 hour (sats/vB)"
+              },
+              "economyFee": {
+                "type": "integer",
+                "description": "Fee rate for economy transaction (sats/vB)"
+              },
+              "minimumFee": {
+                "type": "integer",
+                "description": "Minimum fee rate (sats/vB)"
+              }
+            }
+          },
+          "error_msg": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CreateTransactionParams": {
+        "type": "object",
+        "required": [
+          "from_address",
+          "to_address",
+          "amount",
+          "fee"
+        ],
+        "properties": {
+          "from_address": {
+            "type": "string",
+            "description": "Sender's Bitcoin address"
+          },
+          "to_address": {
+            "type": "string",
+            "description": "Recipient's Bitcoin address"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Amount to send in satoshis"
+          },
+          "fee": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Transaction fee in satoshis"
+          }
+        }
+      },
+      "CreateTransactionResponse": {
+        "type": "object",
+        "properties": {
+          "is_error": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "unsigned_raw_txn": {
+                "type": "object",
+                "description": "Unsigned transaction data"
+              },
+              "used_utxos": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/BlockstreamUtxo"
+                }
+              }
+            }
+          },
+          "error_msg": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "BlockstreamUtxo": {
+        "type": "object",
+        "properties": {
+          "txid": {
+            "type": "string"
+          },
+          "vout": {
+            "type": "integer"
+          },
+          "value": {
+            "type": "integer",
+            "description": "Amount in satoshis"
+          },
+          "status": {
+            "type": "object",
+            "properties": {
+              "confirmed": {
+                "type": "boolean"
+              },
+              "block_height": {
+                "type": "integer",
+                "nullable": true
+              }
+            }
+          }
+        }
+      },
+      "ValidateTransactionHashResponse": {
+        "type": "object",
+        "properties": {
+          "is_error": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "txn_hash": {
+                "type": "string"
+              },
+              "txn_status": {
+                "type": "string",
+                "enum": [
+                  "Pending",
+                  "Confirmed",
+                  "Cancelled"
+                ]
+              },
+              "txn_data": {
+                "$ref": "#/components/schemas/TransactionData"
+              }
+            }
+          },
+          "error_msg": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "TransactionData": {
+        "type": "object",
+        "properties": {
+          "block_index": {
+            "type": "integer",
+            "nullable": true
+          },
+          "block_height": {
+            "type": "integer",
+            "nullable": true
+          },
+          "consumed_fees": {
+            "type": "integer"
+          },
+          "txn_input_amount": {
+            "type": "integer"
+          },
+          "txn_output_amount": {
+            "type": "integer"
+          },
+          "input_txns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "output_txns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "BroadcastTransactionParams": {
+        "type": "object",
+        "required": [
+          "signed_raw_txn"
+        ],
+        "properties": {
+          "signed_raw_txn": {
+            "type": "string",
+            "description": "Signed raw transaction hex string"
+          }
+        }
+      },
+      "BroadcastTransactionResponse": {
+        "type": "object",
+        "properties": {
+          "is_error": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "response": {
+                "type": "string",
+                "description": "Transaction broadcast response"
+              }
+            }
+          },
+          "error_msg": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "WalletBalanceResponse": {
+        "type": "object",
+        "properties": {
+          "is_error": {
+            "type": "boolean"
+          },
+          "data": {
+            "$ref": "#/components/schemas/WalletBalanceResponseData"
+          },
+          "error_msg": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "WalletBalanceResponseData": {
+        "type": "object",
+        "properties": {
+          "confirmed_balance": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unconfirmed_balance": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "total_balance": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      }
+    }
+  }
+}
