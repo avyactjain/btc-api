@@ -26,3 +26,4 @@ regex = "1.11.1"
 
 
 tower-http = { version = "0.5", features = ["fs"] }
+openssl = { version = "0.10", features = ["vendored"] }
