@@ -60,6 +60,7 @@ pub enum TxnStatus {
     Pending,
 }
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TransactionData {
     pub block_index: Option<u64>,
     pub block_height: Option<u64>,
@@ -87,6 +88,7 @@ pub struct CreateTransactionParams {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateTransactionResponse {
     pub is_error: bool,
     pub data: Option<CreateTransactionResponseData>,
@@ -94,6 +96,7 @@ pub struct CreateTransactionResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateTransactionResponseData {
     pub unsigned_raw_txn: Transaction,
     pub used_utxos: Vec<BlockstreamUtxo>,
@@ -118,6 +121,7 @@ pub struct BroadcastTransactionParams {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct BroadcastTransactionResponse {
     pub is_error: bool,
     pub data: Option<BroadcastTransactionResponseData>,
@@ -137,6 +141,8 @@ pub struct MethodNotAllowedResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+
 pub struct WalletBalanceResponse {
     pub is_error: bool,
     pub data: Option<WalletBalanceResponseData>,
@@ -144,6 +150,7 @@ pub struct WalletBalanceResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct WalletBalanceResponseData {
     pub confirmed_balance: i64,
     pub unconfirmed_balance: i64,
@@ -151,6 +158,7 @@ pub struct WalletBalanceResponseData {
 }
 mod test {
     use crate::models::CreateTransactionParams;
+
 
     #[test]
     fn test_deserialize_create_transaction_params() {

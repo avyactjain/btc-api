@@ -25,7 +25,59 @@
 					]
 				}
 			},
-			"response": []
+			"response": [
+				{
+					"name": "http://localhost:3005/networkFee",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://btc-api-936894011708.asia-northeast1.run.app/networkFee",
+							"protocol": "https",
+							"host": [
+								"btc-api-936894011708",
+								"asia-northeast1",
+								"run",
+								"app"
+							],
+							"path": [
+								"networkFee"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "X-Cloud-Trace-Context",
+							"value": "c1197895aac1f9f189932da3d95d3c85"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 15 Mar 2025 13:32:35 GMT"
+						},
+						{
+							"key": "Server",
+							"value": "Google Frontend"
+						},
+						{
+							"key": "Content-Length",
+							"value": "115"
+						},
+						{
+							"key": "Alt-Svc",
+							"value": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"isError\": false,\n    \"data\": {\n        \"fastestFee\": 6,\n        \"halfHourFee\": 6,\n        \"hourFee\": 5,\n        \"economyFee\": 2,\n        \"minimumFee\": 1\n    },\n    \"errorMsg\": null\n}"
+				}
+			]
 		},
 		{
 			"name": "https://btc-api-936894011708.asia-northeast1.run.app/walletBalance?wallet_address=158raURvgxcn5WKT5xSAgXNWfHWheVuFNM",
@@ -55,7 +107,65 @@
 					]
 				}
 			},
-			"response": []
+			"response": [
+				{
+					"name": "https://btc-api-936894011708.asia-northeast1.run.app/walletBalance?wallet_address=158raURvgxcn5WKT5xSAgXNWfHWheVuFNM",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://btc-api-936894011708.asia-northeast1.run.app/walletBalance?wallet_address=158raURvgxcn5WKT5xSAgXNWfHWheVuFNM",
+							"protocol": "https",
+							"host": [
+								"btc-api-936894011708",
+								"asia-northeast1",
+								"run",
+								"app"
+							],
+							"path": [
+								"walletBalance"
+							],
+							"query": [
+								{
+									"key": "wallet_address",
+									"value": "158raURvgxcn5WKT5xSAgXNWfHWheVuFNM"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "X-Cloud-Trace-Context",
+							"value": "0ebc4184c65e739489932da3d95d3887"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 15 Mar 2025 13:32:42 GMT"
+						},
+						{
+							"key": "Server",
+							"value": "Google Frontend"
+						},
+						{
+							"key": "Content-Length",
+							"value": "119"
+						},
+						{
+							"key": "Alt-Svc",
+							"value": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"isError\": false,\n    \"data\": {\n        \"confirmedBalance\": 167442214,\n        \"unconfirmedBalance\": 0,\n        \"totalBalance\": 167442214\n    },\n    \"errorMsg\": null\n}"
+				}
+			]
 		},
 		{
 			"name": "https://btc-api-936894011708.asia-northeast1.run.app/validateTransactionHash?transaction_hash=ce593556a4868d9ac26a860505a1c732aa38aea51d942505afc0b491c3b35f87",
@@ -85,7 +195,65 @@
 					]
 				}
 			},
-			"response": []
+			"response": [
+				{
+					"name": "https://btc-api-936894011708.asia-northeast1.run.app/validateTransactionHash?transaction_hash=ce593556a4868d9ac26a860505a1c732aa38aea51d942505afc0b491c3b35f87",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://btc-api-936894011708.asia-northeast1.run.app/validateTransactionHash?transaction_hash=ce593556a4868d9ac26a860505a1c732aa38aea51d942505afc0b491c3b35f87",
+							"protocol": "https",
+							"host": [
+								"btc-api-936894011708",
+								"asia-northeast1",
+								"run",
+								"app"
+							],
+							"path": [
+								"validateTransactionHash"
+							],
+							"query": [
+								{
+									"key": "transaction_hash",
+									"value": "ce593556a4868d9ac26a860505a1c732aa38aea51d942505afc0b491c3b35f87"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "X-Cloud-Trace-Context",
+							"value": "6d8aa1afed9ea20a5cd047d3e085cbcc"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 15 Mar 2025 13:32:46 GMT"
+						},
+						{
+							"key": "Server",
+							"value": "Google Frontend"
+						},
+						{
+							"key": "Content-Length",
+							"value": "527"
+						},
+						{
+							"key": "Alt-Svc",
+							"value": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"isError\": false,\n    \"data\": {\n        \"txnHash\": \"ce593556a4868d9ac26a860505a1c732aa38aea51d942505afc0b491c3b35f87\",\n        \"txnStatus\": \"confirmed\",\n        \"txnStatusFlag\": 0,\n        \"txnData\": {\n            \"blockIndex\": 884706,\n            \"blockHeight\": 884706,\n            \"consumedFees\": 21150,\n            \"txnInputAmount\": 72921,\n            \"txnOutputAmount\": 51771,\n            \"inputTxns\": [\n                {\n                    \"address\": \"bc1qeqxkfj0mfhq9x3fgn5atzfqg2xfl03s6qj65ew\",\n                    \"amount\": 72921\n                }\n            ],\n            \"outputTxns\": [\n                {\n                    \"address\": \"bc1qc58c0qu8kjyr228enfawwl0w63y8890c3790xz\",\n                    \"amount\": 21595\n                },\n                {\n                    \"address\": \"bc1qvmnqmszyssg6kt8uskd8qffdsrg0yyj2j8fa7e\",\n                    \"amount\": 30176\n                }\n            ]\n        }\n    },\n    \"errorMsg\": null\n}"
+				}
+			]
 		},
 		{
 			"name": "https://btc-api-936894011708.asia-northeast1.run.app/createTransaction",
@@ -118,7 +286,68 @@
 					]
 				}
 			},
-			"response": []
+			"response": [
+				{
+					"name": "https://btc-api-936894011708.asia-northeast1.run.app/createTransaction",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"from_address\": \"bc1qc58c0qu8kjyr228enfawwl0w63y8890c3790xz\",\n    \"to_address\": \"158raURvgxcn5WKT5xSAgXNWfHWheVuFNM\",\n    \"amount\": 100,\n    \"fee\": 10\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://btc-api-936894011708.asia-northeast1.run.app/createTransaction",
+							"protocol": "https",
+							"host": [
+								"btc-api-936894011708",
+								"asia-northeast1",
+								"run",
+								"app"
+							],
+							"path": [
+								"createTransaction"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "X-Cloud-Trace-Context",
+							"value": "c05ad501ba90526589932da3d95d3f57;o=1"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 15 Mar 2025 13:32:39 GMT"
+						},
+						{
+							"key": "Server",
+							"value": "Google Frontend"
+						},
+						{
+							"key": "Content-Length",
+							"value": "109"
+						},
+						{
+							"key": "Alt-Svc",
+							"value": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"isError\": true,\n    \"data\": null,\n    \"errorMsg\": \"NoUtxosFound for Address:bc1qc58c0qu8kjyr228enfawwl0w63y8890c3790xz\"\n}"
+				}
+			]
 		},
 		{
 			"name": "https://btc-api-936894011708.asia-northeast1.run.app/broadcastTransaction",
@@ -151,7 +380,68 @@
 					]
 				}
 			},
-			"response": []
+			"response": [
+				{
+					"name": "https://btc-api-936894011708.asia-northeast1.run.app/broadcastTransaction",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"signed_raw_txn\" : \"1234\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://btc-api-936894011708.asia-northeast1.run.app/broadcastTransaction",
+							"protocol": "https",
+							"host": [
+								"btc-api-936894011708",
+								"asia-northeast1",
+								"run",
+								"app"
+							],
+							"path": [
+								"broadcastTransaction"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "X-Cloud-Trace-Context",
+							"value": "dab31c11266a80165cd047d3e085cede;o=1"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 15 Mar 2025 13:32:50 GMT"
+						},
+						{
+							"key": "Server",
+							"value": "Google Frontend"
+						},
+						{
+							"key": "Content-Length",
+							"value": "151"
+						},
+						{
+							"key": "Alt-Svc",
+							"value": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"isError\": true,\n    \"data\": null,\n    \"errorMsg\": \"InvalidResponse: sendrawtransaction RPC error -22: TX decode failed. Make sure the tx has at least one input.\"\n}"
+				}
+			]
 		}
 	]
 }

@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Bitcoin Transaction API",
-    "description": "REST API for interacting with the Bitcoin network, including:\n  - Fetching wallet balances\n  - Estimating network fees\n  - Validating transactions\n  - Creating new transactions\n  - Broadcasting new transactions\n.\nThe underlying network (Mainnet/Testnet) for this API depends on the configuration of the running application.\n",
+    "description": "REST API for interacting with the Bitcoin network, including:\n  - Fetching wallet balances\n  - Estimating network fees\n  - Validating transactions\n  - Creating new transactions\n  - Broadcasting new transactions\n.\nThe underlying network (Mainnet/Testnet) for this API depends on the configuration of the running application.\n \n [Postman Collection](https://github.com/avyactjain/btc-api/blob/main/postman/BTC-API.postman_collection.json) ",
     "version": "1.0.0"
   },
   "servers": [
