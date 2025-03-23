@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use axum::Json;
+use bitcoin::base58::{self, InvalidCharacterError};
 use bitcoin::{
     absolute::LockTime, consensus::encode::serialize_hex, key::Secp256k1, secp256k1::Message,
     sighash::SighashCache, transaction::Version, Address, Amount, EcdsaSighashType, Network,
@@ -12,7 +13,7 @@ use regex::Regex;
 use reqwest::{Client, Url};
 use response_models::{BlockchaincomResponse, BlockstreamUtxo, BlockstreamWalletBalance};
 use tracing::{debug, error, info};
-use utils::senders_keys;
+use utils::{is_valid_bitcoin_address, senders_keys};
 pub(crate) mod response_models;
 
 use crate::models::{TransactionData, WalletBalanceResponse, WalletBalanceResponseData};
@@ -122,7 +123,7 @@ impl Chain for Bitcoin {
         match self.create_transaction(transaction_params).await {
             Ok((transaction, used_utxos)) => {
                 if self.sign_txn {
-                    let signed_txn_hash = self
+                    let _signed_txn_hash = self
                         .sign_transaction(transaction.clone(), used_utxos.clone())
                         .await;
                 }
@@ -215,6 +216,14 @@ impl Bitcoin {
         &self,
         address: String,
     ) -> Result<WalletBalanceResponseData, BtcApiError> {
+        // Validate the address
+        if !is_valid_bitcoin_address(&address, self.network) {
+            return Err(BtcApiError::InvalidAddress(format!(
+                "Invalid address: {} on network: {}",
+                address, self.network
+            )));
+        }
+
         let url = self.rpc_url.join(&format!("address/{}", address))?;
 
         let blockstream_response = reqwest::get(url).await?.text().await?;
@@ -232,7 +241,7 @@ impl Bitcoin {
 
         Ok(WalletBalanceResponseData {
             confirmed_balance,
-            unconfirmed_balance: unconfirmed_balance,
+            unconfirmed_balance,
             total_balance,
         })
     }
@@ -356,6 +365,21 @@ impl Bitcoin {
         &self,
         transaction_params: CreateTransactionParams,
     ) -> Result<(Transaction, Vec<BlockstreamUtxo>), BtcApiError> {
+        // Validate the addresses
+        if !is_valid_bitcoin_address(&transaction_params.from_address, self.network) {
+            return Err(BtcApiError::InvalidAddress(format!(
+                "Invalid from address: {} on network: {}",
+                transaction_params.from_address, self.network
+            )));
+        }
+
+        if !is_valid_bitcoin_address(&transaction_params.to_address, self.network) {
+            return Err(BtcApiError::InvalidAddress(format!(
+                "Invalid to address: {} on network: {}",
+                transaction_params.to_address, self.network
+            )));
+        }
+
         let send_amount = transaction_params.amount;
 
         let receiver_address =
@@ -537,7 +561,7 @@ impl Bitcoin {
                 txn_hash_url: explorer_url.to_string(),
             })
         } else {
-            return Err(BtcApiError::InvalidBroadcastResponse(response_text));
+            Err(BtcApiError::InvalidBroadcastResponse(response_text))
         }
     }
 }

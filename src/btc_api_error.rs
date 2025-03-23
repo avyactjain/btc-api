@@ -13,6 +13,7 @@ pub enum BtcApiError {
     NoUtxosFound(String),
     InsufficientFunds(u64),
     RegexError(regex::Error),
+    InvalidAddress(String),
 }
 
 impl From<reqwest::Error> for BtcApiError {
@@ -79,6 +80,7 @@ impl std::fmt::Display for BtcApiError {
                 write!(f, "InsufficientFunds: {}", amount)
             }
             BtcApiError::RegexError(e) => write!(f, "RegexError: {}", e),
+            BtcApiError::InvalidAddress(address) => write!(f, "InvalidAddress: {}", address),
         }
     }
 }

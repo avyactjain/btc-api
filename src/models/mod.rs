@@ -142,7 +142,6 @@ pub struct MethodNotAllowedResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-
 pub struct WalletBalanceResponse {
     pub is_error: bool,
     pub data: Option<WalletBalanceResponseData>,
@@ -157,13 +156,12 @@ pub struct WalletBalanceResponseData {
     pub total_balance: i64,
 }
 mod test {
-    use crate::models::CreateTransactionParams;
 
 
     #[test]
     fn test_deserialize_create_transaction_params() {
         let json = r#"{"from_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", "to_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", "amount": 100000000, "fee": 100000000}"#;
-        let params: CreateTransactionParams = serde_json::from_str(json).unwrap();
+        let params: crate::models::CreateTransactionParams = serde_json::from_str(json).unwrap();
         assert_eq!(params.from_address, "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa");
         assert_eq!(params.to_address, "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa");
         assert_eq!(params.amount, 100000000);

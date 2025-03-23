@@ -1,8 +1,10 @@
 use bitcoin::{
     key::{rand::rngs::OsRng, Secp256k1},
     secp256k1::{SecretKey, Signing},
-    Address, CompressedPublicKey, KnownHrp, NetworkKind, PrivateKey, WPubkeyHash,
+    Address, CompressedPublicKey, KnownHrp, Network, NetworkKind, PrivateKey, WPubkeyHash,
 };
+use std::str::FromStr;
+use tracing::{debug, info};
 
 // This function is used to create a testnet wallet
 // Warning : Actual keys of a bitcoin wallet.
@@ -43,4 +45,32 @@ pub fn senders_keys<C: Signing>(secp: &Secp256k1<C>) -> (SecretKey, WPubkeyHash)
     let wpkh = pk.wpubkey_hash().expect("key is compressed");
 
     (sk, wpkh)
+}
+
+pub fn is_valid_bitcoin_address(address: &str, network: Network) -> bool {
+    match Address::from_str(address) {
+        Ok(addr) => match addr.require_network(network) {
+            Ok(_validated_address) => true,
+            Err(err) => {
+                info!("Invalid Bitcoin address {} : {}", address, err);
+                false
+            }
+        },
+        Err(err) => {
+            info!("Unable to parse Bitcoin address {} : {}", address, err);
+            false
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_valid_bitcoin_address() {
+        let address = "tb1q04sf26d069dsfmd079n3ehjzevd9nzewmzg9mf4xk";
+        let is_valid = is_valid_bitcoin_address(address, Network::Testnet);
+        assert!(is_valid);
+    }
 }
