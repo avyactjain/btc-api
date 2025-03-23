@@ -129,10 +129,14 @@ impl Chain for Bitcoin {
 
                 // self.broadcast_transaction(signed_txn_hash).await.unwrap();
 
+                // Calculate weight & vBytes
+                let vbytes = (u64::from(transaction.weight()) + 3) / 4;
+
                 result.is_error = false;
                 result.data = Some(CreateTransactionResponseData {
                     unsigned_raw_txn: transaction,
                     used_utxos,
+                    txn_size: vbytes,
                 });
             }
             Err(err) => {

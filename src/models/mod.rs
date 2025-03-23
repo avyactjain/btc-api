@@ -100,6 +100,7 @@ pub struct CreateTransactionResponse {
 pub struct CreateTransactionResponseData {
     pub unsigned_raw_txn: Transaction,
     pub used_utxos: Vec<BlockstreamUtxo>,
+    pub txn_size: u64,
 }
 
 impl CreateTransactionParams {
