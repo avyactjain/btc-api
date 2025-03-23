@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use axum::Json;
-use bitcoin::base58::{self, InvalidCharacterError};
 use bitcoin::{
     absolute::LockTime, consensus::encode::serialize_hex, key::Secp256k1, secp256k1::Message,
     sighash::SighashCache, transaction::Version, Address, Amount, EcdsaSighashType, Network,

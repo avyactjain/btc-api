@@ -4,7 +4,7 @@ use bitcoin::{
     Address, CompressedPublicKey, KnownHrp, Network, NetworkKind, PrivateKey, WPubkeyHash,
 };
 use std::str::FromStr;
-use tracing::{debug, info};
+use tracing::info;
 
 // This function is used to create a testnet wallet
 // Warning : Actual keys of a bitcoin wallet.
