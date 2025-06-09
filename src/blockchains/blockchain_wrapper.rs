@@ -1,5 +1,3 @@
-use axum::Json;
-
 use crate::{
     chain::Chain,
     models::{
@@ -21,32 +19,32 @@ impl<T: Chain> BlockchainWrapper<T> {
         Self(blockchain)
     }
 
-    pub async fn get_network_fee(&self) -> Json<NetworkFeeResponse> {
+    pub async fn get_network_fee(&self) -> NetworkFeeResponse {
         self.0.get_network_fee().await
     }
 
     pub async fn validate_transaction_hash(
         &self,
         transaction_hash: String,
-    ) -> Json<ValidateTransactionHashResponse> {
+    ) -> ValidateTransactionHashResponse {
         self.0.validate_transaction_hash(transaction_hash).await
     }
 
     pub async fn create_transaction(
         &self,
         transaction: CreateTransactionParams,
-    ) -> Json<CreateTransactionResponse> {
+    ) -> CreateTransactionResponse {
         self.0.create_transaction(transaction).await
     }
 
     pub async fn broadcast_transaction(
         &self,
         transaction: BroadcastTransactionParams,
-    ) -> Json<BroadcastTransactionResponse> {
+    ) -> BroadcastTransactionResponse {
         self.0.broadcast_transaction(transaction).await
     }
 
-    pub async fn get_wallet_balance(&self, address: String) -> Json<WalletBalanceResponse> {
+    pub async fn get_wallet_balance(&self, address: String) -> WalletBalanceResponse {
         self.0.get_wallet_balance(address).await
     }
 }

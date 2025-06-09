@@ -1,6 +1,5 @@
 use std::str::FromStr;
 
-use axum::Json;
 use bitcoin::{
     absolute::LockTime, consensus::encode::serialize_hex, key::Secp256k1, secp256k1::Message,
     sighash::SighashCache, transaction::Version, Address, Amount, EcdsaSighashType, Network,
@@ -15,7 +14,9 @@ use tracing::{debug, error, info};
 use utils::{is_valid_bitcoin_address, senders_keys};
 pub(crate) mod response_models;
 
-use crate::models::{TransactionData, WalletBalanceResponse, WalletBalanceResponseData};
+use crate::models::{
+    BroadcastTransactionParams, TransactionData, WalletBalanceResponse, WalletBalanceResponseData,
+};
 use crate::{
     btc_api_error::BtcApiError,
     chain::Chain,
@@ -50,13 +51,13 @@ pub struct Bitcoin {
 }
 
 impl Chain for Bitcoin {
-    async fn get_network_fee(&self) -> axum::Json<NetworkFeeResponse> {
+    async fn get_network_fee(&self) -> NetworkFeeResponse {
         {
-            let mut result = Json(NetworkFeeResponse {
+            let mut result = NetworkFeeResponse {
                 is_error: true,
                 data: None,
                 error_msg: None,
-            });
+            };
 
             match reqwest::get(MEMPOOL_API_NETWORK_FEE_URL).await {
                 Ok(response) => match response.json().await {
@@ -85,7 +86,7 @@ impl Chain for Bitcoin {
     async fn validate_transaction_hash(
         &self,
         transaction_hash: String,
-    ) -> axum::Json<ValidateTransactionHashResponse> {
+    ) -> ValidateTransactionHashResponse {
         {
             let mut result = ValidateTransactionHashResponse {
                 is_error: true,
@@ -105,14 +106,14 @@ impl Chain for Bitcoin {
                 }
             }
 
-            Json(result)
+            result
         }
     }
 
     async fn create_transaction(
         &self,
-        transaction_params: crate::models::CreateTransactionParams,
-    ) -> Json<crate::models::CreateTransactionResponse> {
+        transaction_params: CreateTransactionParams,
+    ) -> CreateTransactionResponse {
         let mut result = CreateTransactionResponse {
             is_error: true,
             data: None,
@@ -144,13 +145,13 @@ impl Chain for Bitcoin {
             }
         }
 
-        Json(result)
+        result
     }
 
     async fn broadcast_transaction(
         &self,
-        transaction: crate::models::BroadcastTransactionParams,
-    ) -> Json<crate::models::BroadcastTransactionResponse> {
+        transaction: BroadcastTransactionParams,
+    ) -> BroadcastTransactionResponse {
         let mut result = BroadcastTransactionResponse {
             is_error: false,
             data: None,
@@ -167,13 +168,10 @@ impl Chain for Bitcoin {
             }
         }
 
-        Json(result)
+        result
     }
 
-    async fn get_wallet_balance(
-        &self,
-        address: String,
-    ) -> Json<crate::models::WalletBalanceResponse> {
+    async fn get_wallet_balance(&self, address: String) -> WalletBalanceResponse {
         let mut result = WalletBalanceResponse {
             is_error: true,
             data: None,
@@ -190,7 +188,7 @@ impl Chain for Bitcoin {
             }
         }
 
-        Json(result)
+        result
     }
 }
 

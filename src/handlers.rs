@@ -30,7 +30,7 @@ pub(crate) async fn bitcoin_network_fee_handler(
     State(blockchain): State<BlockchainWrapper<Bitcoin>>,
 ) -> Json<NetworkFeeResponse> {
     debug!("Received request to get network fee");
-    blockchain.get_network_fee().await
+    Json(blockchain.get_network_fee().await)
 }
 
 #[axum::debug_handler]
@@ -43,9 +43,11 @@ pub(crate) async fn bitcoin_validate_transaction_hash_handler(
         params
     );
 
-    blockchain
-        .validate_transaction_hash(params.transaction_hash)
-        .await
+    Json(
+        blockchain
+            .validate_transaction_hash(params.transaction_hash)
+            .await,
+    )
 }
 
 #[axum::debug_handler]
@@ -55,7 +57,7 @@ pub(crate) async fn bitcoin_wallet_balance_handler(
 ) -> Json<WalletBalanceResponse> {
     debug!("Received request to fetch wallet balance: {:#?}", params);
 
-    blockchain.get_wallet_balance(params.wallet_address).await
+    Json(blockchain.get_wallet_balance(params.wallet_address).await)
 }
 #[axum::debug_handler]
 pub(crate) async fn bitcoin_create_transaction_handler(
@@ -65,7 +67,7 @@ pub(crate) async fn bitcoin_create_transaction_handler(
     debug!("Received request to create transaction: {:#?}", params);
 
     match params.validate() {
-        Ok(params) => blockchain.create_transaction(params).await,
+        Ok(params) => Json(blockchain.create_transaction(params).await),
         Err(e) => Json(CreateTransactionResponse {
             is_error: true,
             data: None,
@@ -81,5 +83,5 @@ pub(crate) async fn bitcoin_broadcast_transaction_handler(
 ) -> Json<BroadcastTransactionResponse> {
     debug!("Received request to broadcast transaction: {:#?}", params);
 
-    blockchain.broadcast_transaction(params).await
+    Json(blockchain.broadcast_transaction(params).await)
 }

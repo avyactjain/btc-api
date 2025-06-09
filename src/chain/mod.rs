@@ -1,4 +1,3 @@
-use axum::Json;
 use serde::Deserialize;
 
 use crate::models::{
@@ -16,18 +15,18 @@ pub(crate) enum ChainName {
 // Trait for the blockchain implementations
 // Every blockchain should implement this trait
 pub trait Chain {
-    async fn get_network_fee(&self) -> Json<NetworkFeeResponse>;
+    async fn get_network_fee(&self) -> NetworkFeeResponse;
     async fn validate_transaction_hash(
         &self,
         transaction_hash: String,
-    ) -> Json<ValidateTransactionHashResponse>;
+    ) -> ValidateTransactionHashResponse;
     async fn create_transaction(
         &self,
         transaction: CreateTransactionParams,
-    ) -> Json<CreateTransactionResponse>;
+    ) -> CreateTransactionResponse;
     async fn broadcast_transaction(
         &self,
         transaction: BroadcastTransactionParams,
-    ) -> Json<BroadcastTransactionResponse>;
-    async fn get_wallet_balance(&self, address: String) -> Json<WalletBalanceResponse>;
+    ) -> BroadcastTransactionResponse;
+    async fn get_wallet_balance(&self, address: String) -> WalletBalanceResponse;
 }
