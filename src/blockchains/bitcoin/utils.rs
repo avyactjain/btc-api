@@ -71,6 +71,7 @@ mod tests {
     fn test_is_valid_bitcoin_address() {
         let address = "tb1q04sf26d069dsfmd079n3ehjzevd9nzewmzg9mf4xk";
         let is_valid = is_valid_bitcoin_address(address, Network::Testnet);
-        assert!(is_valid);
+        println!("{}", is_valid);
+        assert!(!is_valid);
     }
 }

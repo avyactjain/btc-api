@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{blockchains::bitcoin::response_models::BlockstreamUtxo, btc_api_error::BtcApiError};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct NetworkFeeResponse {
     pub is_error: bool,
@@ -11,14 +11,14 @@ pub struct NetworkFeeResponse {
     pub error_msg: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct NetworkFeeResponseData {
-    fastest_fee: i64,
-    half_hour_fee: i64,
-    hour_fee: i64,
-    economy_fee: i64,
-    minimum_fee: i64,
+    pub fastest_fee: i64,
+    pub half_hour_fee: i64,
+    pub hour_fee: i64,
+    pub economy_fee: i64,
+    pub minimum_fee: i64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -157,7 +157,6 @@ pub struct WalletBalanceResponseData {
     pub total_balance: i64,
 }
 mod test {
-
 
     #[test]
     fn test_deserialize_create_transaction_params() {

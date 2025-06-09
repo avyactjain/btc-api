@@ -3,7 +3,6 @@ use axum::{
     Router,
 };
 use blockchains::bitcoin::Bitcoin;
-use blockchains::blockchain_wrapper::BlockchainWrapper;
 use btc_api_error::BtcApiError;
 use chain::ChainName;
 use handlers::{
@@ -14,6 +13,8 @@ use handlers::{
 
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
+
+use crate::blockchains::btc_api_state::BtcApiState;
 mod blockchains;
 mod btc_api_error;
 mod chain;
@@ -43,7 +44,7 @@ async fn main() -> Result<(), BtcApiError> {
     // Create shared state of the blockchain instance
     let blockchain = match config.chain_config.chain {
         //Should inject the required config into the blockchain instance here.
-        ChainName::Bitcoin => BlockchainWrapper::new(Bitcoin::new(
+        ChainName::Bitcoin => BtcApiState::new(Bitcoin::new(
             &config.chain_config.rpc_url,
             &config.chain_config.variant,
             config.sign_txn,

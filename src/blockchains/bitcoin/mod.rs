@@ -51,6 +51,7 @@ pub struct Bitcoin {
 }
 
 #[async_trait::async_trait]
+#[mockall::automock]
 impl Chain for Bitcoin {
     async fn get_network_fee(&self) -> NetworkFeeResponse {
         {

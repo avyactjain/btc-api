@@ -17,6 +17,9 @@ uuid = { version = "1.7", features = ["v4"] }
 futures = "0.3.31"
 itertools = "0.14.0"
 url = "2.5.4"
+hyper = { version = "1.0", features = ["full"] }
+http-body-util = "0.1"
+tower = { version = "0.4", features = ["util"] }
 
 bitcoincore-rpc = "0.19.0"
 bitcoin = "0.32.5"
@@ -28,3 +31,4 @@ regex = "1.11.1"
 tower-http = { version = "0.5", features = ["fs"] }
 openssl = { version = "0.10", features = ["vendored"] }
 async-trait = "0.1.88"
+mockall = "0.13.1"
