@@ -14,6 +14,7 @@ pub(crate) enum ChainName {
 
 // Trait for the blockchain implementations
 // Every blockchain should implement this trait
+#[async_trait::async_trait]
 pub trait Chain {
     async fn get_network_fee(&self) -> NetworkFeeResponse;
     async fn validate_transaction_hash(

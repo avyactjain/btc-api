@@ -50,6 +50,7 @@ pub struct Bitcoin {
     pub sign_txn: bool,
 }
 
+#[async_trait::async_trait]
 impl Chain for Bitcoin {
     async fn get_network_fee(&self) -> NetworkFeeResponse {
         {

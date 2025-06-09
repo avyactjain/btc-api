@@ -27,3 +27,4 @@ regex = "1.11.1"
 
 tower-http = { version = "0.5", features = ["fs"] }
 openssl = { version = "0.10", features = ["vendored"] }
+async-trait = "0.1.88"
